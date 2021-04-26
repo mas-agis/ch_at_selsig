@@ -1,0 +1,17 @@
+
+VCFtools - 0.1.15
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--gzvcf /home/masagis/data/third_project/aa_phasing/phased_29.gt.vcf.gz
+	--keep atfl
+	--recode-INFO-all
+	--recode
+	--stdout
+
+Using zlib version: 1.2.11
+Keeping individuals in 'keep' list
+After filtering, kept 10 out of 79 Individuals
+Outputting VCF file...
+After filtering, kept 1296136 out of a possible 1296136 Sites
+Run Time = 39.00 seconds
