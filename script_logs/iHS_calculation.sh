@@ -3,7 +3,7 @@
 ## usage ./iHS_calculation <group code(atfl/chbt/chbi)>
 
 group=$(echo "$1")
-mapfile -t myArray < <(seq 27)
+mapfile -t myArray < <(seq 29)
 selscan="/home/masagis/data/selscan/selscan"
 map="/home/masagis/data/third_project/map_file"
 output="/home/masagis/data/third_project/iHS"
