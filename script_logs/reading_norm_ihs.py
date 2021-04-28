@@ -8,19 +8,25 @@ Created on Wed Apr 28 10:59:45 2021
 import os
 import pandas as pd
 import seaborn as sns
-import matplotlib.pyplot as plt
 
 os.getcwd()
 os.chdir(r"D:\maulana\third_project/norm_ihs/atfl")
+
 #contents of all files in the folder
 dir_contents = os.listdir()
 dir_contents
+
 # initializing substring
 subs = 'windows'
+
 # using list comprehension to get string with substring 
 files = [i for i in dir_contents if subs in i]
+
 #creating empty dataframe to hold all dataset having ihs score >=4
 summary = pd.DataFrame(columns=("start", "end", "ihs_score", "chr", "group"))
+
+#creating empty dataframe to hold all dataset regardless its ihs score 
+all_data = pd.DataFrame(columns=("start", "end", "ihs_score", "chr", "group"))
 
 #reading each files and concatenate them
 for file in files:
@@ -38,16 +44,12 @@ for file in files:
     #adding columns for chr and group
     data["chr"] = chro
     data["group"] = ras
+    #append data from the current file to all dataset
+    all_data = all_data.append(data)
     #append data from the current file which score >=4 to summary data
     summary = summary.append(data[data["ihs_score"]>= 4])
 
+#Plotting the whole datasets 
+g = sns.FacetGrid(data=all_data, col="chr", col_wrap=6, height=2)
+g.map(sns.lineplot, "start", "ihs_score", alpha=0.7)
 
-fig, ax = plt.subplots()
-ax.plot(data["start"], data["ihs_score"], "bo" )
-ax.set(xlabel='Genome', ylabel='iHS score (normalized)')
-ax.grid()
-plt.show()
-
-sns.lineplot("start", "ihs_score", data=data)
-
-data[data["ihs_score"]>= 4]
