@@ -3,7 +3,7 @@
 ## usage ./normalization_iHS <group code(atfl/chbt/chbi)>
 
 group=$(echo "$1")
-mapfile -t myArray < <(seq 28 29)
+mapfile -t myArray < <(seq 29)
 norm="/home/masagis/data/selscan/norm"
 output="/home/masagis/data/third_project/norm_iHS"
 input="/home/masagis/data/third_project/iHS"

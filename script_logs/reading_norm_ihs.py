@@ -4,11 +4,12 @@ Created on Wed Apr 28 10:59:45 2021
 
 @author: NUWI_352019
 """
-
+#import modules
 import os
 import pandas as pd
 import seaborn as sns
 
+#set working directory
 os.getcwd()
 os.chdir(r"D:\maulana\third_project/norm_ihs/atfl")
 
@@ -53,3 +54,33 @@ for file in files:
 g = sns.FacetGrid(data=all_data, col="chr", col_wrap=6, height=2)
 g.map(sns.lineplot, "start", "ihs_score", alpha=0.7)
 
+
+###Reading contents of Tajima's D
+#import libraries
+import os
+import pandas as pd
+import seaborn as sns
+
+#set working directory
+os.chdir(r"D:\maulana\third_project\D'_statistics\atfl")
+
+#read Tajima's D file
+file = "atfl_1.Tajima.D"
+data = pd.read_csv(file, sep="\t")
+data.describe()
+
+#plot distribution
+sns.lineplot("BIN_START", "TajimaD", data=data)
+
+#confidence interval
+upper_bound = data["TajimaD"].mean() + (data["TajimaD"].std()*1.5)
+upper_bound
+lower_bound = data["TajimaD"].mean() - (data["TajimaD"].std()*1.5)
+lower_bound
+
+#filtering data greater than upper_bound or lower than lower_bound
+filtered_data = data[data["TajimaD"] > upper_bound]
+filtered_data = filtered_data.append(data[data["TajimaD"] < lower_bound])
+
+###Finding overlaps between summary(iHS) and filtered_data(Tajima's D)
+result = pd.concat([df1, df4], axis=1, join="inner")
