@@ -98,46 +98,40 @@ null=rnorm(length(x),mean(x),sd(x))
 pnorm(x, mu, sig)
 y=c(4,4,4,4,4,4,4,4)
 pnorm(y, mu, sig)
-z=c(6,6,6,5.2, 5.1, 5.3, 10)
-pnorm(z, mu, sig, lower.tail = FALSE)
-z=c(6,6,6,5.2, 5.1, 5.3, -10)
-pnorm(z, mu, sig, lower.tail = TRUE)
-diff(pnorm(z, mu, sig, lower.tail = TRUE))
-a=c(1,1,1,1,1,1,1,1,1,1,1,1)
-b=c(3,3,3,3,3,3,3,3)
-c=c(4,4,1,1,2,2,3,3,3,3,5,5,4,6)
-pnorm(z, 0, 1, lower.tail = FALSE)
-c=c(4,4,-1,-1,2,-2,3,-3,-3,3,5,5,4,6)
-pnorm(z, mean(c), sd(c), lower.tail = FALSE)
-d=c(4,4,4,4,4,4,4,4)
 
-setwd("D:/maulana/third_project/norm_ihs/atfl")
-list.files()
-ihs <- read.csv("atfl_29.ihs.out.100bins.norm.10kb.windows", sep="\t", header = FALSE)
-ihs$pval <- pnorm(ihs$V6, lower.tail = FALSE, log.p = TRUE)
-plot(ihs$V1, -(ihs$pval))
-bonferonni <- -log10(0.05/length(ihs))
-bonferonni <- -log10(0.05/1000000)
-
-mu <- mean(ihs$V6, na.rm = TRUE)
-sig <- sd(ihs$V6, na.rm = TRUE)
-ihs$norm <- (ihs$V6 - mu)/sig
-
-t.test(y, x)
-t.test(y,null)
-t.test(z, x)
-t.test(z, null)
-t.test(a, x)
-t.test(a, null)
-t.test(b, x)
-t.test(b ,null)
-t.test(c, x)
-t.test(c, null)
-t.test(d, null)
-t.test(x, null)
-
-val=c(0, 0.1, 0.3, 0.5, 0.7, 0.9, 1)
-calc <- function(x){
-  1-2*abs(x-0.5)
-}
-d = calc(val)
+#trying calculating meta-ss - simulation 
+#first test
+z=c(6,6,6,5.2, 5.1, 5.3, 10, 6,6,6,5.2, 5.1, 5.3, 10)
+data = (z - mean(z)) / sd(z)
+pval = pnorm(data, mu, sig, lower.tail = FALSE)
+pval
+phi = dnorm(data, mu, sig)
+phi
+Zscore1 = -phi**-1 - (-phi**-1 * pval)
+Zscore1
+#second test
+z=c(2, 1, 0.5, 3, 5, 2, 1, 2, 1, 4, 2, 1 , 2, 3)
+data = (z - mean(z)) / sd(z)
+pval = pnorm(data, mu, sig, lower.tail = FALSE)
+pval
+phi = dnorm(data, mu, sig)
+phi
+Zscore2 = -phi**-1 - (-phi**-1 * pval)
+Zscore2
+#third test
+z=c(3, -2, -3, -1, -0.5, 2, 3, 1, -4, -2, 0.8, 1.2, 3.4, 2.7)
+data = (z - mean(z)) / sd(z)
+pval = pnorm(data, mu, sig, lower.tail = FALSE)
+pval
+phi = dnorm(data, mu, sig)
+phi
+Zscore3 = -phi**-1 - (-phi**-1 * pval)
+Zscore3
+#meta-ss
+meta_ss = (Zscore1 + Zscore2 + Zscore3) / sqrt((1+1+1)**2)
+#referring back meta-ss to standard normal distribution
+meta_ss_norm = (meta_ss - mean(meta_ss)) / sd(meta_ss)
+meta_ss_norm
+#getting p-value for each variables in meta_ss_norm both upper-lower tails
+meta_ss_pval = pnorm(meta_ss_norm, lower.tail = TRUE)
+meta_ss_pval
