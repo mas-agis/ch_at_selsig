@@ -84,3 +84,22 @@ filtered_data = filtered_data.append(data[data["TajimaD"] < lower_bound])
 
 ###Finding overlaps between summary(iHS) and filtered_data(Tajima's D)
 result = pd.concat([df1, df4], axis=1, join="inner")
+
+##calculating p-value for every points
+import numpy as np
+from scipy.stats import norm
+
+data_start = -10
+data_end = 10
+data_points = 21
+data = np.linspace(data_start, data_end, data_points)
+data
+
+point_of_interest = 5
+mu = np.mean(data)
+sigma = np.std(data)
+interval = (data_end - data_start) / (data_points - 1)
+
+probability = norm.pdf(data, loc=mu, scale=sigma) #* interval
+probability
+norm.pdf(12, loc=mu, scale=sigma)

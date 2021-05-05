@@ -100,9 +100,12 @@ y=c(4,4,4,4,4,4,4,4)
 pnorm(y, mu, sig)
 
 #trying calculating meta-ss - simulation 
-#first test
+#first test - ihs
 z=c(6,6,6,5.2, 5.1, 5.3, 10, 6,6,6,5.2, 5.1, 5.3, 10)
 data = (z - mean(z)) / sd(z)
+hist(data)
+mu = mean(data, na.rm = T)
+sig = sd(data, na.rm = T)
 pval = pnorm(data, mu, sig, lower.tail = FALSE)
 pval
 phi = dnorm(data, mu, sig)
@@ -112,6 +115,9 @@ Zscore1
 #second test
 z=c(2, 1, 0.5, 3, 5, 2, 1, 2, 1, 4, 2, 1 , 2, 3)
 data = (z - mean(z)) / sd(z)
+hist(data)
+mu = mean(data, na.rm = T)
+sig = sd(data, na.rm = T)
 pval = pnorm(data, mu, sig, lower.tail = FALSE)
 pval
 phi = dnorm(data, mu, sig)
@@ -121,6 +127,52 @@ Zscore2
 #third test
 z=c(3, -2, -3, -1, -0.5, 2, 3, 1, -4, -2, 0.8, 1.2, 3.4, 2.7)
 data = (z - mean(z)) / sd(z)
+hist(data)
+mu = mean(data, na.rm = T)
+sig = sd(data, na.rm = T)
+pval = pnorm(data, mu, sig, lower.tail = FALSE)
+pval
+phi = dnorm(data, mu, sig)
+phi
+Zscore3 = -phi**-1 - (-phi**-1 * pval)
+Zscore3
+#meta-ss
+meta_ss = (Zscore1 + Zscore2 + Zscore3) / sqrt((1+1+1)**2)
+#referring back meta-ss to standard normal distribution
+meta_ss_norm = (meta_ss - mean(meta_ss)) / sd(meta_ss)
+meta_ss_norm
+#getting p-value for each variables in meta_ss_norm both upper-lower tails
+meta_ss_pval = pnorm(meta_ss_norm, lower.tail = TRUE)
+meta_ss_pval
+
+#trying calculating meta-ss - simulation - windows bin 
+#first test - ihs
+z = read.csv("D:/maulana/third_project/norm_ihs/atfl/atfl_29.ihs.out.100bins.norm.10kb.windows", sep="\t", header = FALSE)[6]
+hist(z$V6)
+mu = mean(z$V6, na.rm = T)
+sig = sd(z$V6, na.rm = T)
+z$pval = pnorm(z$V6, mu, sig, lower.tail = FALSE)
+head(z)
+phi = dnorm(data, mu, sig)
+phi
+Zscore1 = -phi**-1 - (-phi**-1 * pval)
+Zscore1
+#second test
+z=c(2, 1, 0.5, 3, 5, 2, 1, 2, 1, 4, 2, 1 , 2, 3)
+data = (z - mean(z)) / sd(z)
+z = read.csv("D:/maulana/third_project/nSL/atfl/atfl_29.nsl.out", sep="\t", header = FALSE)[6]
+data = (z$V6 - mean(z$V6)) / sd(z$V6)
+hist(data)
+pval = pnorm(data, mu, sig, lower.tail = FALSE)
+pval
+phi = dnorm(data, mu, sig)
+phi
+Zscore2 = -phi**-1 - (-phi**-1 * pval)
+Zscore2
+#third test
+z=c(3, -2, -3, -1, -0.5, 2, 3, 1, -4, -2, 0.8, 1.2, 3.4, 2.7)
+data = (z - mean(z)) / sd(z)
+hist(data)
 pval = pnorm(data, mu, sig, lower.tail = FALSE)
 pval
 phi = dnorm(data, mu, sig)
