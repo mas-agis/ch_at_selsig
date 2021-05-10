@@ -94,12 +94,37 @@ data_end = 10
 data_points = 21
 data = np.linspace(data_start, data_end, data_points)
 data
+len(data)
 
 point_of_interest = 5
 mu = np.mean(data)
 sigma = np.std(data)
 interval = (data_end - data_start) / (data_points - 1)
 
+#normalized data
+data_norm = (data-mu)/sigma
+data_norm
+
+#getting probability for each point in normal distribution
 probability = norm.pdf(data, loc=mu, scale=sigma) #* interval
+probability1 = norm.pdf(data_norm, loc=mu, scale=sigma) #* interval
 probability
+probability1
+
+#assume we have have a variable with value of 12
 norm.pdf(12, loc=mu, scale=sigma)
+norm.pdf(22, loc=mu, scale=sigma)
+help(norm)
+# Specifically, norm.pdf(x, loc, scale) is identically equivalent to 
+#norm.pdf(y) / scale with y = (x - loc) / scale. 
+
+##Explanation from scipy.stats
+from scipy.stats import norm
+import matplotlib.pyplot as plt
+fig, ax = plt.subplots(1, 1)
+
+mean, var, skew, kurt = norm.stats(moments='mvsk')
+
+x = np.linspace(norm.ppf(0.01), norm.ppf(0.99), 100)
+ax.plot(x, norm.pdf(x),'r-', lw=5, alpha=0.6, label='norm pdf')
+
