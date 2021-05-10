@@ -71,6 +71,7 @@ data.describe()
 
 #plot distribution
 sns.lineplot("BIN_START", "TajimaD", data=data)
+sns.distplot(data["TajimaD"])
 
 #confidence interval
 upper_bound = data["TajimaD"].mean() + (data["TajimaD"].std()*1.5)
@@ -88,6 +89,7 @@ result = pd.concat([df1, df4], axis=1, join="inner")
 ##calculating p-value for every points
 import numpy as np
 from scipy.stats import norm
+from scipy import stats
 
 data_start = -10
 data_end = 10
@@ -107,24 +109,27 @@ data_norm
 
 #getting probability for each point in normal distribution
 probability = norm.pdf(data, loc=mu, scale=sigma) #* interval
-probability1 = norm.pdf(data_norm, loc=mu, scale=sigma) #* interval
+probability1 = norm.pdf(data_norm, loc=0, scale=1) #* interval
 probability
 probability1
 
-#assume we have have a variable with value of 12
-norm.pdf(12, loc=mu, scale=sigma)
-norm.pdf(22, loc=mu, scale=sigma)
-help(norm)
-# Specifically, norm.pdf(x, loc, scale) is identically equivalent to 
-#norm.pdf(y) / scale with y = (x - loc) / scale. 
+#transform probability to z-score - both un/normalized have same z-score
+stats.zscore(probability)
+stats.zscore(probability1)
 
-##Explanation from scipy.stats
-from scipy.stats import norm
-import matplotlib.pyplot as plt
-fig, ax = plt.subplots(1, 1)
+##Read output of Fst fst atfl_chya chr_29 
+import os
+import pandas as pd
+import seaborn as sns
 
-mean, var, skew, kurt = norm.stats(moments='mvsk')
+#set working directory
+os.chdir(r"D:\maulana\third_project\fst\atfl")
 
-x = np.linspace(norm.ppf(0.01), norm.ppf(0.99), 100)
-ax.plot(x, norm.pdf(x),'r-', lw=5, alpha=0.6, label='norm pdf')
+#read file
+file = "atfl_chya_29.windowed.weir.fst"
+data = pd.read_csv(file, sep="\t")
+data.describe()
 
+#plot distribution
+sns.lineplot("BIN_START", "MEAN_FST", data=data)
+sns.distplot(data["MEAN_FST"])
