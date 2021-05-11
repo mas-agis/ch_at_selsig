@@ -54,38 +54,6 @@ for file in files:
 g = sns.FacetGrid(data=all_data, col="chr", col_wrap=6, height=2)
 g.map(sns.lineplot, "start", "ihs_score", alpha=0.7)
 
-
-###Reading contents of Tajima's D
-#import libraries
-import os
-import pandas as pd
-import seaborn as sns
-
-#set working directory
-os.chdir(r"D:\maulana\third_project\D'_statistics\atfl")
-
-#read Tajima's D file
-file = "atfl_1.Tajima.D"
-data = pd.read_csv(file, sep="\t")
-data.describe()
-
-#plot distribution
-sns.lineplot("BIN_START", "TajimaD", data=data)
-sns.distplot(data["TajimaD"])
-
-#confidence interval
-upper_bound = data["TajimaD"].mean() + (data["TajimaD"].std()*1.5)
-upper_bound
-lower_bound = data["TajimaD"].mean() - (data["TajimaD"].std()*1.5)
-lower_bound
-
-#filtering data greater than upper_bound or lower than lower_bound
-filtered_data = data[data["TajimaD"] > upper_bound]
-filtered_data = filtered_data.append(data[data["TajimaD"] < lower_bound])
-
-###Finding overlaps between summary(iHS) and filtered_data(Tajima's D)
-result = pd.concat([df1, df4], axis=1, join="inner")
-
 ##calculating p-value for every points
 import numpy as np
 from scipy.stats import norm
@@ -117,7 +85,48 @@ probability1
 stats.zscore(probability)
 stats.zscore(probability1)
 
-##Read output of Fst fst atfl_chya chr_29 
+###Reading contents of Tajima's D
+#import libraries
+import os
+import pandas as pd
+import numpy as np
+import seaborn as sns
+from scipy.stats import norm
+from scipy import stats
+
+#set working directory
+os.chdir(r"D:\maulana\third_project\D'_statistics\atfl")
+
+#read Tajima's D file
+file = "atfl_29.Tajima.D"
+data = pd.read_csv(file, sep="\t")
+data.describe()
+
+#plot distribution
+sns.lineplot("BIN_START", "TajimaD", data=data)
+sns.distplot(data["TajimaD"])
+
+#getting probability for each point in normal distribution
+data["pval"] = norm.pdf(data["TajimaD"], loc=np.mean(data["TajimaD"]), 
+                     scale=np.std(data["TajimaD"])) #* interval
+data["pval1"] = norm.pdf(data["TajimaD"]) #* interval
+
+sns.distplot(data["pval"])
+sns.distplot(data["pval1"])
+#confidence interval
+upper_bound = data["TajimaD"].mean() + (data["TajimaD"].std()*1.5)
+upper_bound
+lower_bound = data["TajimaD"].mean() - (data["TajimaD"].std()*1.5)
+lower_bound
+
+#filtering data greater than upper_bound or lower than lower_bound
+filtered_data = data[data["TajimaD"] > upper_bound]
+filtered_data = filtered_data.append(data[data["TajimaD"] < lower_bound])
+
+###Finding overlaps between summary(iHS) and filtered_data(Tajima's D)
+result = pd.concat([df1, df4], axis=1, join="inner")
+
+###Read output of Fst fst atfl_chya chr_29 
 import os
 import pandas as pd
 import seaborn as sns
@@ -127,9 +136,49 @@ os.chdir(r"D:\maulana\third_project\fst\atfl")
 
 #read file
 file = "atfl_chya_29.windowed.weir.fst"
-data = pd.read_csv(file, sep="\t")
-data.describe()
+data1 = pd.read_csv(file, sep="\t")
+data1.describe()
 
 #plot distribution
-sns.lineplot("BIN_START", "MEAN_FST", data=data)
-sns.distplot(data["MEAN_FST"])
+sns.lineplot("BIN_START", "MEAN_FST", data=data1)
+sns.distplot(data1["MEAN_FST"])
+
+###Reading iHS normalization
+os.chdir(r"D:\maulana\third_project\norm_ihs\atfl")
+
+#read file
+file = "atfl_29.ihs.out.100bins.norm.10kb.windows"
+data2 = pd.read_csv(file, sep="\t", header =None)
+data2.describe()
+
+#plot distribution
+sns.lineplot(data2[0], data2[5])
+sns.distplot(data2[5])
+
+###Reading nSL normalization
+os.chdir(r"D:\maulana\third_project\norm_nsl\atfl")
+
+#read file
+file = "atfl_29.nsl.out.100bins.norm.10kb.windows"
+data3 = pd.read_csv(file, sep="\t", header =None)
+data3.describe()
+
+#plot distribution
+sns.lineplot(data3[0], data3[5])
+sns.distplot(data3[5])
+
+###Reading normalization xpehh 
+os.chdir(r"D:\maulana\third_project\norm_xpehh\atfl")
+
+#read file
+file = "atfl_chbi_29.xpehh.out.norm.10kb.windows"
+data4 = pd.read_csv(file, sep="\t", header=None)
+data4.describe()
+
+#plot distribution
+sns.lineplot(data4[0], data4[8])
+sns.distplot(data4[8])
+
+##making class with inputs file, which chromosomes, column of the windows/pos, 
+# column of the value(default the last column of daata), 
+#option whether value is p-value or not(default is yes) (5 arguments)
