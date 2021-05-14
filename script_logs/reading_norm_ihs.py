@@ -287,9 +287,31 @@ result = pd.concat([result, data4], axis=1, join="outer")
 
 ##Applying meta_ss (#stop here!!)
 length_col = len(result.columns)
-def meta_ss :
+odd = [numbers for numbers in range(length_col) if numbers % 2 == 1 ]
+even = [numbers for numbers in range(length_col) if numbers % 2 == 0 ]
+numerator = 0
+denumerator = 0
+for o, e in zip(odd, even):
+    numerator = numerator + result[o] * result[e]
+    denumerator = denumerator + result[e] * result[e]
     
+def meta_ss (data=result):
+    
+
+def plus (x):
+    if x is int:
+        z = x+1
+    else :
+        z = print("sorry it is not formatted yet")
+    return z
+
+plus(2)
+tes= [1,2,3,4,5,6,7]
+plus(tes)
+
 data = data.assign(window = lambda x: data["BIN_START"] + 1)
+numbers[0] % 2 == 1:
+    return [numbers[0]] + find_odds(numbers[1:])
 
 ##making class with inputs file, which chromosomes, column of the windows/pos, 
 # column of the value(default the last column of daata), 
