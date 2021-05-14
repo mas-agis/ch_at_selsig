@@ -130,12 +130,22 @@ X = data["TajimaD"]
 data["standard_TajimaD"] = preprocessing.scale(X)
 
 #getting probability for each point in normal distribution
-data["pval_tajima"] = norm.pdf(data["TajimaD"]) #* interval
-data["pval_std_tajima"] = norm.pdf(data["standard_TajimaD"] ) #* interval
+data["pval_tajima"] = norm.pdf(data["standard_TajimaD"] ) #* interval
 
 #sns.distplot(data["pval"])
 sns.distplot(data["pval_tajima"])
-sns.distplot(data["pval_std_tajima"])
+
+#transform probability to z-score - both un/normalized have same z-score
+data["z"] = stats.zscore(data["pval_tajima"], nan_policy="omit")
+sns.distplot(data["z"])
+
+#keep only chro, window, and z columns
+data.columns
+data.drop(labels=["BIN_START", "N_SNPS", "TajimaD", "standard_TajimaD", 
+                  "pval_tajima"], axis=1, inplace = True)
+data = data.set_index('window')
+data.columns = ["CHROM","z_D"]
+data["weight_D"] = 1
 
 ###Read output of Fst fst atfl_chya chr_29 
 #set working directory
@@ -155,8 +165,23 @@ X = data1["MEAN_FST"]
 data1["standard_fst"] = preprocessing.scale(X)
 
 #getting probability for each point in normal distribution
-data1["pval_fst"] = norm.pdf(data1["MEAN_FST"]) #* interval
-data1["pval_std_fst"] = norm.pdf(data1["standard_fst"]) #* interval
+data1["pval_fst"] = norm.pdf(data1["standard_fst"]) #* interval
+
+#transform probability to z-score - both un/normalized have same z-score
+data1["z"] = stats.zscore(data1["pval_fst"], nan_policy="omit")
+sns.distplot(data1["z"])
+
+#keep only chro, window, and z columns
+data1.columns
+data1.drop(labels=["BIN_END", "N_VARIANTS", "WEIGHTED_FST", 
+                   "MEAN_FST", "standard_fst", "pval_fst"], axis=1,
+           inplace = True)
+data1.columns = ["CHROM","window","z_fst"]
+data1 = data1.set_index('window')
+data1["weighted_fst"] = 1
+
+#merge data and data 1
+result = pd.concat([data, data1], axis=1, join="outer")
 
 ###Reading iHS normalization
 os.chdir(r"D:\maulana\third_project\norm_ihs\atfl")
@@ -170,8 +195,24 @@ data2.describe()
 sns.lineplot(data2[0], data2[5])
 sns.distplot(data2[5])
 
+#standardized score
+X = data2[5]
+data2["standard_ihs"] = preprocessing.scale(X)
+
 #getting probability for each point in normal distribution
-data2["pval_ihs"] = norm.pdf(data2[5]) #* interval
+data2["pval_ihs"] = norm.pdf(data2["standard_ihs"]) #* interval
+
+#transform probability to z-score - both un/normalized have same z-score
+data2["z_ihs"] = stats.zscore(data2["pval_ihs"], nan_policy="omit")
+sns.distplot(data2["z_ihs"])
+
+#keep only chro, window, and z columns
+data2.columns
+data2.drop(labels=[1, 2, 3, 4, 5, "standard_ihs", "pval_ihs"], axis=1,
+           inplace = True)
+data2.columns = ["CHROM","window","z_fst"]
+data2 = data1.set_index('window')
+data2["weighted_fst"] = 1
 
 ###Reading nSL normalization
 os.chdir(r"D:\maulana\third_project\norm_nsl\atfl")
@@ -185,8 +226,16 @@ data3.describe()
 sns.lineplot(data3[0], data3[5])
 sns.distplot(data3[5])
 
+#standardized score
+X = data3[5]
+data3["standard_nsl"] = preprocessing.scale(X)
+
 #getting probability for each point in normal distribution
-data3["pval_nsl"] = norm.pdf(data3[5]) #* interval
+data3["pval_nsl"] = norm.pdf(data3["standard_nsl"]) #* interval
+
+#transform probability to z-score - both un/normalized have same z-score
+data3["z"] = stats.zscore(data3["pval_nsl"], nan_policy="omit")
+sns.distplot(data3["z"])
 
 ###Reading normalization xpehh 
 os.chdir(r"D:\maulana\third_project\norm_xpehh\atfl")
@@ -200,12 +249,19 @@ data4.describe()
 sns.lineplot(data4[0], data4[8])
 sns.distplot(data4[8])
 
+#standardized score
+X = data4[8]
+data4["standard_xpehh"] = preprocessing.scale(X)
+
 #getting probability for each point in normal distribution
-data4["pval_xpehh"] = norm.pdf(data4[8]) #* interval
+data4["pval_xpehh"] = norm.pdf(data4["standard_xpehh"]) #* interval
 
 #transform probability to z-score - both un/normalized have same z-score
-data["z"] = stats.zscore(data["pval"], nan_policy="omit")
-data["z1"] = stats.zscore(data["pval1"], nan_policy="omit")
+data4["z"] = stats.zscore(data4["pval_xpehh"], nan_policy="omit")
+
+
+##Combining all z score of all tests together based on BIN_START
+
 
 ##making class with inputs file, which chromosomes, column of the windows/pos, 
 # column of the value(default the last column of daata), 
