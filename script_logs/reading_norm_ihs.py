@@ -141,10 +141,10 @@ sns.distplot(data["z"])
 
 #keep only chro, window, and z columns
 data.columns
-data.drop(labels=["BIN_START", "N_SNPS", "TajimaD", "standard_TajimaD", 
+data.drop(labels=["CHROM", "BIN_START", "N_SNPS", "TajimaD", "standard_TajimaD", 
                   "pval_tajima"], axis=1, inplace = True)
 data = data.set_index('window')
-data.columns = ["CHROM","z_D"]
+data.columns = ["z_D"]
 data["weight_D"] = 1
 
 ###Read output of Fst fst atfl_chya chr_29 
@@ -173,10 +173,10 @@ sns.distplot(data1["z"])
 
 #keep only chro, window, and z columns
 data1.columns
-data1.drop(labels=["BIN_END", "N_VARIANTS", "WEIGHTED_FST", 
+data1.drop(labels=["CHROM", "BIN_END", "N_VARIANTS", "WEIGHTED_FST", 
                    "MEAN_FST", "standard_fst", "pval_fst"], axis=1,
            inplace = True)
-data1.columns = ["CHROM","window","z_fst"]
+data1.columns = ["window","z_fst"]
 data1 = data1.set_index('window')
 data1["weighted_fst"] = 1
 
@@ -210,9 +210,12 @@ sns.distplot(data2["z_ihs"])
 data2.columns
 data2.drop(labels=[1, 2, 3, 4, 5, "standard_ihs", "pval_ihs"], axis=1,
            inplace = True)
-data2.columns = ["CHROM","window","z_fst"]
-data2 = data1.set_index('window')
-data2["weighted_fst"] = 1
+data2.columns = ["window","z_ihs"]
+data2 = data2.set_index("window")
+data2["weighted_ihs"] = 1
+
+#merge result and data 2
+result = pd.concat([result, data2], axis=1, join="outer")
 
 ###Reading nSL normalization
 os.chdir(r"D:\maulana\third_project\norm_nsl\atfl")
@@ -237,6 +240,17 @@ data3["pval_nsl"] = norm.pdf(data3["standard_nsl"]) #* interval
 data3["z"] = stats.zscore(data3["pval_nsl"], nan_policy="omit")
 sns.distplot(data3["z"])
 
+#keep only chro, window, and z columns
+data3.columns
+data3.drop(labels=[1, 2, 3, 4, 5, "standard_nsl", "pval_nsl"], axis=1,
+           inplace = True)
+data3.columns = ["window","z_nsl"]
+data3 = data3.set_index("window")
+data3["weighted_nsl"] = 1
+
+#merge result and data 3
+result = pd.concat([result, data3], axis=1, join="outer")
+
 ###Reading normalization xpehh 
 os.chdir(r"D:\maulana\third_project\norm_xpehh\atfl")
 
@@ -260,8 +274,22 @@ data4["pval_xpehh"] = norm.pdf(data4["standard_xpehh"]) #* interval
 data4["z"] = stats.zscore(data4["pval_xpehh"], nan_policy="omit")
 
 
-##Combining all z score of all tests together based on BIN_START
+#keep only chro, window, and z columns
+data4.columns
+data4.drop(labels=[1, 2, 3, 4, 5, 6, 7, 8, "standard_xpehh", "pval_xpehh"], axis=1,
+           inplace = True)
+data4.columns = ["window","z_xpehh"]
+data4 = data4.set_index("window")
+data4["weighted_xpehh"] = 1
 
+#merge result and data 4
+result = pd.concat([result, data4], axis=1, join="outer")
+
+##Applying meta_ss (#stop here!!)
+length_col = len(result.columns)
+def meta_ss :
+    
+data = data.assign(window = lambda x: data["BIN_START"] + 1)
 
 ##making class with inputs file, which chromosomes, column of the windows/pos, 
 # column of the value(default the last column of daata), 
