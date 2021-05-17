@@ -286,17 +286,38 @@ data4["weighted_xpehh"] = 1
 result = pd.concat([result, data4], axis=1, join="outer")
 
 ##Applying meta_ss (#stop here!!)
+#getting the length of columns in the combined dataframe
 length_col = len(result.columns)
-odd = [numbers for numbers in range(length_col) if numbers % 2 == 1 ]
+#even is the column number containing Z score for each test
 even = [numbers for numbers in range(length_col) if numbers % 2 == 0 ]
-numerator = 0
-denumerator = 0
-for o, e in zip(odd, even):
-    numerator = numerator + result[o] * result[e]
+#odd is the column number containing weight for each test
+odd = [numbers for numbers in range(length_col) if numbers % 2 == 1 ]
+#creating empty dataframe containing numerator and denumerator of meta-ss
+meta_ss = pd.DataFrame({'numerator' : []})
+meta_ss.insert(1, "denumerator", [], allow_duplicates=False)
+#looping over each test to update the numerator and denumerator values
+for e, o in zip(even, odd):
+    #creating temp dataframe for multiplication of Z score and its weighted test
+    temp["numer"] = result.iloc[:,e] * result.iloc[:,o]
+    #add the new generated score to the numerator column, with filling Na as 0
+    meta_ss["numerator"] = meta_ss["numerator"] + temp.numer.fillna(0)
+    #update the denumerator by square of weighted value
+    meta_ss["denumerator"] = meta_ss["denumerator"] + result.iloc[:,o]**2
+    
+#(Stop disini!!) script dbawah jalan, tapi pake for loop d atas nggak!!!    
+    meta_ss["numerator"] = result["z_D"] * result["weight_D"]
+    temp["numer"] = result["z_xpehh"] * result["weighted_xpehh"]   
+    meta_ss["numerator"] = meta_ss["numerator"] + temp.numer.fillna(0)
+    
+    result.iloc[:,e] * result.iloc[:,o]
     denumerator = denumerator + result[e] * result[e]
     
-def meta_ss (data=result):
-    
+#def meta_ss (data=result):
+  
+       
+ 
+result = result.assign(meta= lambda x: data["BIN_START"] + 1)
+
 
 def plus (x):
     if x is int:
