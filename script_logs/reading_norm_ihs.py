@@ -297,12 +297,39 @@ meta_ss = pd.DataFrame({'numerator' : []})
 meta_ss.insert(1, "denumerator", [], allow_duplicates=False)
 #looping over each test to update the numerator and denumerator values
 for e, o in zip(even, odd):
-    #creating temp dataframe for multiplication of Z score and its weighted test
-    temp["numer"] = result.iloc[:,e] * result.iloc[:,o]
+    #creating temp series for multiplication of Z score and its weighted test
+    temp = result.iloc[:,e] * result.iloc[:,o]
     #add the new generated score to the numerator column, with filling Na as 0
-    meta_ss["numerator"] = meta_ss["numerator"] + temp.numer.fillna(0)
+    meta_ss["numerator"] = meta_ss.fillna(0)["numerator"] + temp.fillna(0)
+    #update the denumerator by square of weighted value, the nan values in test weight is set as 1
+    meta_ss["denumerator"] = meta_ss.fillna(0)["denumerator"] + result.fillna(1).iloc[:,o]**2
+#finalizing score of meta-ss by numerator over square-root of denumerator
+meta_ss = meta_ss.assign(score= lambda x: meta_ss["numerator"] / np.sqrt(meta_ss["denumerator"]))
+#calculating -log(p-value) for the score for each window
+meta_ss = meta_ss.assign(log_pval= lambda x: -1*np.log(norm.pdf(meta_ss["score"])))
+#plot the distribution of meta-ss score
+sns.distplot(meta_ss["score"])
+#plot the distribution of -log(pval) of meta-ss score
+sns.distplot(meta_ss["log_pval"])
+#lineplot of index and -log(p-value)
+sns.lineplot(meta_ss.index, meta_ss["log_pval"])
+#scatter plot of index and -log(p-value) (#stop in here!!)
+meta_ss.plot(kind='scatter', x='window', y="log_pval") 
+sns.relplot(x=meta_ss.index, y=meta_ss["log_pval"], sizes=(40, 400), alpha=.5, 
+            height=6)
+
+meta_ss.index
+
+-1*np.log(meta_ss["pval"])
+
+result["weight_D"] = 0.5
+result["weighted_xpehh"] = 0.5
+    e,o=0,1
+    temp["numer"] = result.iloc[:,0] * result.iloc[:,1]
+    #add the new generated score to the numerator column, with filling Na as 0
+    meta_ss["numerator"] = meta_ss["numerator"] + temp.fillna(0)['numer']
     #update the denumerator by square of weighted value
-    meta_ss["denumerator"] = meta_ss["denumerator"] + result.iloc[:,o]**2
+    meta_ss["denumerator"] = meta_ss["denumerator"] + result.iloc[:,1]**2
     
 #(Stop disini!!) script dbawah jalan, tapi pake for loop d atas nggak!!!    
     meta_ss["numerator"] = result["z_D"] * result["weight_D"]
