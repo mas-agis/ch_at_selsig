@@ -108,6 +108,7 @@ import seaborn as sns
 from scipy.stats import norm
 from scipy import stats
 from sklearn import preprocessing
+import matplotlib.pyplot as plt
 
 ###Reading contents of Tajima's D
 #set working directory
@@ -285,9 +286,11 @@ data4["weighted_xpehh"] = 1
 #merge result and data 4
 result = pd.concat([result, data4], axis=1, join="outer")
 
-##Applying meta_ss (#stop here!!)
+##Applying meta_ss 
 #getting the length of columns in the combined dataframe
 length_col = len(result.columns)
+#getting the length of rows(scanning windows)
+length_row = len(result)
 #even is the column number containing Z score for each test
 even = [numbers for numbers in range(length_col) if numbers % 2 == 0 ]
 #odd is the column number containing weight for each test
@@ -307,44 +310,43 @@ for e, o in zip(even, odd):
 meta_ss = meta_ss.assign(score= lambda x: meta_ss["numerator"] / np.sqrt(meta_ss["denumerator"]))
 #calculating -log(p-value) for the score for each window
 meta_ss = meta_ss.assign(log_pval= lambda x: -1*np.log(norm.pdf(meta_ss["score"])))
+#bonferroni threshold
+bonf = -1*np.log(0.05/length_row)
 #plot the distribution of meta-ss score
 sns.distplot(meta_ss["score"])
 #plot the distribution of -log(pval) of meta-ss score
 sns.distplot(meta_ss["log_pval"])
-#lineplot of index and -log(p-value)
-sns.lineplot(meta_ss.index, meta_ss["log_pval"])
-#scatter plot of index and -log(p-value) (#stop in here!!)
-meta_ss.plot(kind='scatter', x='window', y="log_pval") 
-sns.relplot(x=meta_ss.index, y=meta_ss["log_pval"], sizes=(40, 400), alpha=.5, 
-            height=6)
+#lineplot of index and -log(p-value) with bonf-treshold for horizontal line
+g = sns.lineplot(meta_ss.index, meta_ss["log_pval"])
+g.axes.axhline(bonf, ls='--')
+plt.show()
 
-meta_ss.index
+##making class with inputs file, which chromosomes, column of the windows/pos, 
+# column of the value(default the last column of daata), 
+#option whether value is p-value or not(default is yes) (5 arguments)
 
--1*np.log(meta_ss["pval"])
+class meta_ss:
 
-result["weight_D"] = 0.5
-result["weighted_xpehh"] = 0.5
-    e,o=0,1
-    temp["numer"] = result.iloc[:,0] * result.iloc[:,1]
-    #add the new generated score to the numerator column, with filling Na as 0
-    meta_ss["numerator"] = meta_ss["numerator"] + temp.fillna(0)['numer']
-    #update the denumerator by square of weighted value
-    meta_ss["denumerator"] = meta_ss["denumerator"] + result.iloc[:,1]**2
+    base_dir = "/home/Documents/"    
     
-#(Stop disini!!) script dbawah jalan, tapi pake for loop d atas nggak!!!    
-    meta_ss["numerator"] = result["z_D"] * result["weight_D"]
-    temp["numer"] = result["z_xpehh"] * result["weighted_xpehh"]   
-    meta_ss["numerator"] = meta_ss["numerator"] + temp.numer.fillna(0)
+    def __init__(self, name):
+        self.breed = name
+        self.tests = []
+        self.chr = []
+        
+    def add_tests(self, tests):
+        self.tests.append(tests)
     
-    result.iloc[:,e] * result.iloc[:,o]
-    denumerator = denumerator + result[e] * result[e]
-    
-#def meta_ss (data=result):
-  
-       
  
-result = result.assign(meta= lambda x: data["BIN_START"] + 1)
-
+atfl = meta_ss("atfl")
+atfl.breed
+atfl.add_tests("xpehh")
+atfl.add_tests("tajima")
+atfl.add_tests("ihs")
+atfl.chr
+atfl.base_dir = "/home/naji/Documents"
+chbi = meta_ss("chbi")
+chbi.base_dir
 
 def plus (x):
     if x is int:
@@ -361,12 +363,8 @@ data = data.assign(window = lambda x: data["BIN_START"] + 1)
 numbers[0] % 2 == 1:
     return [numbers[0]] + find_odds(numbers[1:])
 
-##making class with inputs file, which chromosomes, column of the windows/pos, 
-# column of the value(default the last column of daata), 
-#option whether value is p-value or not(default is yes) (5 arguments)
 
-#data["pval"] = norm.pdf(data["TajimaD"], loc=np.mean(data["TajimaD"]), 
-               #      scale=np.std(data["TajimaD"])) #* interval
+
 
 #data normalization
 temp = data["TajimaD"].to_numpy() 
