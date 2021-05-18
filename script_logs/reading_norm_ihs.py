@@ -326,7 +326,7 @@ plt.show()
 #option whether value is p-value or not(default is yes) (5 arguments)
 
 class meta_ss:
-
+(##stop here!!! next task is to assign base_dir as global)
     base_dir = "/home/Documents/"    
     
     def __init__(self, name):
