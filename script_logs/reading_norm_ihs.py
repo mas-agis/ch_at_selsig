@@ -296,28 +296,28 @@ even = [numbers for numbers in range(length_col) if numbers % 2 == 0 ]
 #odd is the column number containing weight for each test
 odd = [numbers for numbers in range(length_col) if numbers % 2 == 1 ]
 #creating empty dataframe containing numerator and denumerator of meta-ss
-meta_ss = pd.DataFrame({'numerator' : []})
-meta_ss.insert(1, "denumerator", [], allow_duplicates=False)
+meta_selsig = pd.DataFrame({'numerator' : []})
+meta_selsig.insert(1, "denumerator", [], allow_duplicates=False)
 #looping over each test to update the numerator and denumerator values
 for e, o in zip(even, odd):
     #creating temp series for multiplication of Z score and its weighted test
     temp = result.iloc[:,e] * result.iloc[:,o]
     #add the new generated score to the numerator column, with filling Na as 0
-    meta_ss["numerator"] = meta_ss.fillna(0)["numerator"] + temp.fillna(0)
+    meta_selsig["numerator"] = meta_selsig.fillna(0)["numerator"] + temp.fillna(0)
     #update the denumerator by square of weighted value, the nan values in test weight is set as 1
-    meta_ss["denumerator"] = meta_ss.fillna(0)["denumerator"] + result.fillna(1).iloc[:,o]**2
+    meta_selsig["denumerator"] = meta_selsig.fillna(0)["denumerator"] + result.fillna(1).iloc[:,o]**2
 #finalizing score of meta-ss by numerator over square-root of denumerator
-meta_ss = meta_ss.assign(score= lambda x: meta_ss["numerator"] / np.sqrt(meta_ss["denumerator"]))
+meta_selsig = meta_selsig.assign(score= lambda x: meta_selsig["numerator"] / np.sqrt(meta_selsig["denumerator"]))
 #calculating -log(p-value) for the score for each window
-meta_ss = meta_ss.assign(log_pval= lambda x: -1*np.log(norm.pdf(meta_ss["score"])))
+meta_selsig = meta_selsig.assign(log_pval= lambda x: -1*np.log(norm.pdf(meta_selsig["score"])))
 #bonferroni threshold
 bonf = -1*np.log(0.05/length_row)
 #plot the distribution of meta-ss score
-sns.distplot(meta_ss["score"])
+sns.distplot(meta_selsig["score"])
 #plot the distribution of -log(pval) of meta-ss score
-sns.distplot(meta_ss["log_pval"])
+sns.distplot(meta_selsig["log_pval"])
 #lineplot of index and -log(p-value) with bonf-treshold for horizontal line
-g = sns.lineplot(meta_ss.index, meta_ss["log_pval"])
+g = sns.lineplot(meta_selsig.index, meta_selsig["log_pval"], palette="pastel" )
 g.axes.axhline(bonf, ls='--')
 plt.show()
 
@@ -325,39 +325,83 @@ plt.show()
 # column of the value(default the last column of daata), 
 #option whether value is p-value or not(default is yes) (5 arguments)
 
+home_dir = "/home/documents/Naji"
+
 class meta_ss:
-(##stop here!!! next task is to assign base_dir as global)
-    base_dir = "/home/Documents/"    
-    
-    def __init__(self, name):
+
+    #import libraries
+    import os
+    import pandas as pd
+    import numpy as np
+    import seaborn as sns
+    from scipy.stats import norm
+    from scipy import stats
+    from sklearn import preprocessing
+    import matplotlib.pyplot as plt
+
+    #set home_dir  as base_dir
+    base_dir = home_dir #"/home/Documents/"    
+    #initiane instance variables of breed, tests, and chromosome   
+    def __init__(self, name, chro):
         self.breed = name
         self.tests = []
-        self.chr = []
+        self.chr = chro
+        self.number = []
         
-    def add_tests(self, tests):
-        self.tests.append(tests)
+    def add_tests(self, test):
+        self.tests.append(test)
+    
+    def add_number(self, numb):
+        self.number.append(numb)
+        
+    #simple function adding one as model for building class, taking int, float, and list
+    def plus (self, x):
+        if type(x) is int:
+            return x+1
+        elif type(x) is float:
+            return x+1
+        elif type(x) is list:
+            return [i+1 for i in x] 
+        else: 
+            raise ValueError("Sorry your number is not defined")
+        
+    def calculate(self):
+        return self.plus(self.number)
+    
+    ###Reading contents of Tajima's D
     
  
-atfl = meta_ss("atfl")
+atfl = meta_ss("atfl", 29)
 atfl.breed
 atfl.add_tests("xpehh")
 atfl.add_tests("tajima")
 atfl.add_tests("ihs")
 atfl.chr
-atfl.base_dir = "/home/naji/Documents"
-chbi = meta_ss("chbi")
-chbi.base_dir
+atfl.base_dir
+atfl.number
+atfl.add_number(4)
+atfl.add_number(5)
+atfl.add_number(8)
+atfl.number
+atfl.calculate()
 
+
+#simple function adding one as model for building class, taking int, float, and list
 def plus (x):
-    if x is int:
-        z = x+1
-    else :
-        z = print("sorry it is not formatted yet")
-    return z
+    if type(x) is int:
+        return x+1
+    elif type(x) is float:
+        return x+1
+    elif type(x) is list:
+        return [i+1 for i in x] 
+    else: 
+        raise ValueError("Sorry your number is not defined")
 
-plus(2)
 tes= [1,2,3,4,5,6,7]
 plus(tes)
+plus(23.5)
+a = 2
+plus(a)
 
 data = data.assign(window = lambda x: data["BIN_START"] + 1)
 numbers[0] % 2 == 1:
