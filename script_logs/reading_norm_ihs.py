@@ -328,7 +328,8 @@ plt.show()
 home_dir = r"D:\maulana\third_project"
 
 class meta_ss:
-
+    '''Here write the explanation of meta_ss class'''
+    
     #import libraries
     import os
     import pandas as pd
@@ -347,27 +348,10 @@ class meta_ss:
         self.breed = name
         self.tests = []
         self.chr = chro
-        self.number = []
+        self.meta_selsig = {}
         
     def add_tests(self, test):
         self.tests.append(test)
-    
-    def add_number(self, numb):
-        self.number.append(numb)
-        
-    #simple function adding one as model for building class, taking int, float, and list
-    def plus (self, x):
-        if type(x) is int:
-            return x+1
-        elif type(x) is float:
-            return x+1
-        elif type(x) is list:
-            return [i+1 for i in x] 
-        else: 
-            raise ValueError("Sorry your number is not defined")
-        
-    def calculate(self):
-        return self.plus(self.number)
     
     #Reading contents of Tajima's D
     def tajima_d(self):
@@ -477,45 +461,108 @@ class meta_ss:
         data3["weighted_nsl"] = 1
         return data3
     
-     #Reading contents of xpehh (##Stop in here!!! Lunch Break!)
+    #Reading contents of xpehh
+    def xpehh(self):
+        #define the path of xpehh output for current breed
+        path = os.path.join(self.base_dir, "norm_xpehh", self.breed)
+        #define searching pattern for output file of fst with same chromosomes
+        pattern = r".*" + str(self.chr) + ".xpehh.out.norm.10kb.windows"
+        #list several fst outputs for current breed and chromosome against other breeds
+        files = [os.path.join(path, f) for f in os.listdir(path) if re.match(pattern, f)]
+        #keep number of fst tests for current breed, in order to weight the score
+        number_of_test = len(files)
+        #creating empty dataframe for concatenate all xpehh tests
+        data = pd.DataFrame({})
+        #looping over to read each comparison test results
+        for file in files:
+            #read the file
+            data4 = pd.read_csv(file, sep="\t", header=None)
+            #standardized score
+            X = data4[8]
+            data4["standard_xpehh"] = preprocessing.scale(X)
+            #getting probability for each point in normal distribution
+            data4["pval_xpehh"] = norm.pdf(data4["standard_xpehh"]) 
+            #transform probability to z-score - both un/normalized have same z-score
+            data4["z"] = stats.zscore(data4["pval_xpehh"], nan_policy="omit")
+            #keep only chro, window, and z columns
+            data4.columns
+            data4.drop(labels=[1, 2, 3, 4, 5, 6, 7, 8, "standard_xpehh", 
+                               "pval_xpehh"], axis=1, inplace = True)
+            data4.columns = ["window","z_xpehh"]
+            data4 = data4.set_index("window")
+            data4["weighted_xpehh"] = 1/number_of_test 
+            #concatenate by column data1 to the result
+            data = pd.concat([data, data4], axis=1, join="outer")         
+        return data
     
-###Reading normalization xpehh 
-os.chdir(r"D:\maulana\third_project\norm_xpehh\atfl")
-
-#read file
-file = "atfl_chbi_29.xpehh.out.norm.10kb.windows"
-data4 = pd.read_csv(file, sep="\t", header=None)
-data4.describe()
-
-#plot distribution
-sns.lineplot(data4[0], data4[8])
-sns.distplot(data4[8])
-
-#standardized score
-X = data4[8]
-data4["standard_xpehh"] = preprocessing.scale(X)
-
-#getting probability for each point in normal distribution
-data4["pval_xpehh"] = norm.pdf(data4["standard_xpehh"]) #* interval
-
-#transform probability to z-score - both un/normalized have same z-score
-data4["z"] = stats.zscore(data4["pval_xpehh"], nan_policy="omit")
-
-
-#keep only chro, window, and z columns
-data4.columns
-data4.drop(labels=[1, 2, 3, 4, 5, 6, 7, 8, "standard_xpehh", "pval_xpehh"], axis=1,
-           inplace = True)
-data4.columns = ["window","z_xpehh"]
-data4 = data4.set_index("window")
-data4["weighted_xpehh"] = 1 
-    
+    #Combine results of all tests
+    def combined_test(self):
+        ############# for loop chromosome 1:29
+        #column binding results of the five tests
+        result = pd.DataFrame({})
+        for test in self.tests:
+            if test == "tajima_d":
+                result = pd.concat([result, self.tajima_d()], axis=1, join="outer")
+            if test == "fst":
+                result = pd.concat([result, self.fst()], axis=1, join="outer")
+            if test == "ihs":
+                result = pd.concat([result, self.ihs()], axis=1, join="outer")
+            if test == "nsl":
+                result = pd.concat([result, self.nsl()], axis=1, join="outer")    
+            if test == "xpehh":
+                result = pd.concat([result, self.xpehh()], axis=1, join="outer")
         
+        #Applying meta_ss 
+        #getting the length of columns in the combined dataframe
+        length_col = len(result.columns)
+        #getting the length of rows(scanning windows)
+        length_row = len(result)
+        #even is the column number containing Z score for each test
+        even = [numbers for numbers in range(length_col) if numbers % 2 == 0 ]
+        #odd is the column number containing weight for each test
+        odd = [numbers for numbers in range(length_col) if numbers % 2 == 1 ]
+        #creating empty dataframe containing numerator and denumerator of meta-ss
+        meta_selsig = pd.DataFrame({'numerator' : []})
+        meta_selsig.insert(1, "denumerator", [], allow_duplicates=False)
+        #looping over each test to update the numerator and denumerator values
+        for e, o in zip(even, odd):
+            #creating temp series for multiplication of Z score and its weighted test
+            temp = result.iloc[:,e] * result.iloc[:,o]
+            #add the new generated score to the numerator column, with filling Na as 0
+            meta_selsig["numerator"] = meta_selsig.fillna(0)["numerator"] + temp.fillna(0)
+            #update the denumerator by square of weighted value, the nan values in test weight is set as 1
+            meta_selsig["denumerator"] = meta_selsig.fillna(0)["denumerator"] + result.fillna(1).iloc[:,o]**2
+        ############## for loop chromosome 1:29
+        #finalizing score of meta-ss by numerator over square-root of denumerator
+        meta_selsig = meta_selsig.assign(score= lambda x: meta_selsig["numerator"] / np.sqrt(meta_selsig["denumerator"]))
+        #calculating -log(p-value) for the score for each window
+        meta_selsig = meta_selsig.assign(log_pval= lambda x: -1*np.log(norm.pdf(meta_selsig["score"])))
+        #bonferroni threshold
+        bonf = -1*np.log(0.05/length_row)
+        self.meta_selsig = meta_selsig
+        return print("Combined test has been done!")
+
+#(Next task, combining by row for all chromosomes, and plot by chromosomes in x-axis)
+
 atfl = meta_ss("atfl", 29)
 atfl.breed
 atfl.add_tests("xpehh")
-atfl.add_tests("tajima")
+atfl.add_tests("tajima_d")
 atfl.add_tests("ihs")
+atfl.add_tests("fst")
+atfl.add_tests("nsl")
+temp = atfl.combined_test()
+temp.columns
+temp
+#plot the distribution of meta-ss score
+sns.distplot(temp["score"])
+#plot the distribution of -log(pval) of meta-ss score
+sns.distplot(temp["log_pval"])
+#lineplot of index and -log(p-value) with bonf-treshold for horizontal line
+g = sns.lineplot(temp.index, temp["log_pval"], palette="pastel" )
+g.axes.axhline(bonf, ls='--')
+plt.show()
+
 atfl.chr
 atfl.base_dir
 atfl.number
@@ -527,7 +574,53 @@ del atfl.number[-1]
 atfl.number
 atfl.calculate()
 atfl.ihs()
-atfl.nsl()
+atfl.xpehh()
+
+chro = 30
+class trial:
+    number = list(range(27,chro))
+    def __init__(self, name):
+        self.name = name
+        
+    def print_out (self):
+        for num in self.number:
+            print ("This is file for " + self.name + " chromosome " + str(num) )
+    
+chbi = trial("chbi")
+chbi.print_out()
+    
+class simple_math:
+    '''Trial of making class with basic function adding one to an integer,
+    float, or a list containing integer/float'''
+    
+    #initiane instance variables of breed, tests, and chromosome   
+    def __init__(self, number):
+        self.number = number
+         
+    def add_number(self, numb):
+        self.number.append(numb)
+        
+    #simple function adding one as model for building class, taking int, float, and list
+    def plus (self, x):
+        if type(x) is int:
+            return x+1
+        elif type(x) is float:
+            return x+1
+        elif type(x) is list:
+            return [i+1 for i in x] 
+        else: 
+            raise ValueError("Sorry your number is not defined")
+    
+    #execute plus function on self.number values    
+    def calculate(self):
+        return self.plus(self.number)
+
+#trial of simple_math class
+tes= [1,2,3,4,5,6,7]
+trial = simple_math(tes)
+trial.calculate()
+a = 2
+simple_math.calculate(2)
 
 #simple function adding one as model for building class, taking int, float, and list
 def plus (x):
