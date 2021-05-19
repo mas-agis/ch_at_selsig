@@ -325,7 +325,7 @@ plt.show()
 # column of the value(default the last column of daata), 
 #option whether value is p-value or not(default is yes) (5 arguments)
 
-home_dir = "/home/documents/Naji"
+home_dir = r"D:\maulana\third_project"
 
 class meta_ss:
 
@@ -340,7 +340,8 @@ class meta_ss:
     import matplotlib.pyplot as plt
 
     #set home_dir  as base_dir
-    base_dir = home_dir #"/home/Documents/"    
+    base_dir = home_dir 
+    
     #initiane instance variables of breed, tests, and chromosome   
     def __init__(self, name, chro):
         self.breed = name
@@ -368,9 +369,148 @@ class meta_ss:
     def calculate(self):
         return self.plus(self.number)
     
-    ###Reading contents of Tajima's D
+    #Reading contents of Tajima's D
+    def tajima_d(self):
+        #define the filename of tajima_d output using breed name and chromosome
+        filename = self.breed + "_" + str(self.chr) + ".Tajima.D"
+        #define the filename with its full path
+        file = os.path.join(self.base_dir, "tajima_d", self.breed, filename) 
+        #read the data using pandas
+        data = pd.read_csv(file, sep="\t")
+        #create window column by adding 1 to bin-start, to match scanning window of other tests
+        data = data.assign(window = lambda x: data["BIN_START"] + 1)
+        #standardized score
+        X = data["TajimaD"]
+        data["standard_TajimaD"] = preprocessing.scale(X)
+        #getting probability for each point in normal distribution
+        data["pval_tajima"] = norm.pdf(data["standard_TajimaD"] ) 
+        #transform probability to z-score - both un/normalized have same z-score
+        data["z"] = stats.zscore(data["pval_tajima"], nan_policy="omit")
+        #keep only chro, window, and z columns
+        data.drop(labels=["CHROM", "BIN_START", "N_SNPS", "TajimaD", "standard_TajimaD", 
+                  "pval_tajima"], axis=1, inplace = True)
+        #set window column as index
+        data = data.set_index('window')
+        data.columns = ["z_D"]
+        data["weight_D"] = 1
+        return data
     
- 
+    #Reading contents of Fst
+    def fst(self):
+        #define the path of fst output for current breed
+        path = os.path.join(self.base_dir, "fst", self.breed)
+        #define searching pattern for output file of fst with same chromosomes
+        pattern = r".*" + str(self.chr) + ".windowed.weir.fst"
+        #list several fst outputs for current breed and chromosome against other breeds
+        files = [os.path.join(path, f) for f in os.listdir(path) if re.match(pattern, f)]
+        #keep number of fst tests for current breed, in order to weight the score
+        number_of_test = len(files)
+        #creating empty dataframe for concatenate all fst tests
+        data = pd.DataFrame({})
+        #looping over to read each comparison test results
+        for file in files:
+            #read the file
+            data1 = pd.read_csv(file, sep="\t")
+            #standardized score
+            X = data1["MEAN_FST"]
+            data1["standard_fst"] = preprocessing.scale(X)
+            #getting probability for each point in normal distribution
+            data1["pval_fst"] = norm.pdf(data1["standard_fst"])
+            #transform probability to z-score - both un/normalized have same z-score
+            data1["z"] = stats.zscore(data1["pval_fst"], nan_policy="omit")
+            #keep only chro, window, and z columns
+            data1.columns
+            data1.drop(labels=["CHROM", "BIN_END", "N_VARIANTS", "WEIGHTED_FST", 
+                   "MEAN_FST", "standard_fst", "pval_fst"], axis=1, inplace = True)
+            data1.columns = ["window","z_fst"]
+            data1 = data1.set_index('window')
+            data1["weighted_fst"] = 1/number_of_test
+            #concatenate by column data1 to the result
+            data = pd.concat([data, data1], axis=1, join="outer")         
+        return data
+
+    #Reading contents of window-normalized ihs 
+    def ihs(self):
+        #define the filename of tajima_d output using breed name and chromosome
+        filename = self.breed + "_" + str(self.chr) + ".ihs.out.100bins.norm.10kb.windows"
+        #define the filename with its full path
+        file = os.path.join(self.base_dir, "norm_ihs", self.breed, filename) 
+        #read file
+        data2 = pd.read_csv(file, sep="\t", header =None)
+        #standardized score
+        X = data2[5]
+        data2["standard_ihs"] = preprocessing.scale(X)
+        #getting probability for each point in normal distribution
+        data2["pval_ihs"] = norm.pdf(data2["standard_ihs"])
+        #transform probability to z-score - both un/normalized have same z-score
+        data2["z_ihs"] = stats.zscore(data2["pval_ihs"], nan_policy="omit")
+        #keep only chro, window, and z columns
+        data2.columns
+        data2.drop(labels=[1, 2, 3, 4, 5, "standard_ihs", "pval_ihs"], axis=1,
+                   inplace = True)
+        data2.columns = ["window","z_ihs"]
+        data2 = data2.set_index("window")
+        data2["weighted_ihs"] = 1
+        return data2
+
+    #Reading contents of window-normalized nsl 
+    def nsl(self):
+        #define the filename of tajima_d output using breed name and chromosome
+        filename = self.breed + "_" + str(self.chr) + ".nsl.out.100bins.norm.10kb.windows"
+        #define the filename with its full path
+        file = os.path.join(self.base_dir, "norm_nsl", self.breed, filename) 
+        #read file
+        data3 = pd.read_csv(file, sep="\t", header =None)
+        #standardized score
+        X = data3[5]
+        data3["standard_nsl"] = preprocessing.scale(X)
+        #getting probability for each point in normal distribution
+        data3["pval_nsl"] = norm.pdf(data3["standard_nsl"])
+        #transform probability to z-score - both un/normalized have same z-score
+        data3["z_nsl"] = stats.zscore(data3["pval_nsl"], nan_policy="omit")
+        #keep only chro, window, and z columns
+        data3.columns
+        data3.drop(labels=[1, 2, 3, 4, 5, "standard_nsl", "pval_nsl"], axis=1,
+                   inplace = True)
+        data3.columns = ["window","z_nsl"]
+        data3 = data3.set_index("window")
+        data3["weighted_nsl"] = 1
+        return data3
+    
+     #Reading contents of xpehh (##Stop in here!!! Lunch Break!)
+    
+###Reading normalization xpehh 
+os.chdir(r"D:\maulana\third_project\norm_xpehh\atfl")
+
+#read file
+file = "atfl_chbi_29.xpehh.out.norm.10kb.windows"
+data4 = pd.read_csv(file, sep="\t", header=None)
+data4.describe()
+
+#plot distribution
+sns.lineplot(data4[0], data4[8])
+sns.distplot(data4[8])
+
+#standardized score
+X = data4[8]
+data4["standard_xpehh"] = preprocessing.scale(X)
+
+#getting probability for each point in normal distribution
+data4["pval_xpehh"] = norm.pdf(data4["standard_xpehh"]) #* interval
+
+#transform probability to z-score - both un/normalized have same z-score
+data4["z"] = stats.zscore(data4["pval_xpehh"], nan_policy="omit")
+
+
+#keep only chro, window, and z columns
+data4.columns
+data4.drop(labels=[1, 2, 3, 4, 5, 6, 7, 8, "standard_xpehh", "pval_xpehh"], axis=1,
+           inplace = True)
+data4.columns = ["window","z_xpehh"]
+data4 = data4.set_index("window")
+data4["weighted_xpehh"] = 1 
+    
+        
 atfl = meta_ss("atfl", 29)
 atfl.breed
 atfl.add_tests("xpehh")
@@ -382,9 +522,12 @@ atfl.number
 atfl.add_number(4)
 atfl.add_number(5)
 atfl.add_number(8)
+atfl.add_number('yoho')
+del atfl.number[-1]
 atfl.number
 atfl.calculate()
-
+atfl.ihs()
+atfl.nsl()
 
 #simple function adding one as model for building class, taking int, float, and list
 def plus (x):

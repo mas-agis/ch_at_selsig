@@ -5,7 +5,7 @@
 group=$(echo "$1")
 mapfile -t myArray < <(seq 29)
 norm="/home/masagis/data/selscan/norm"
-output="/home/masagis/data/third_project/norm_iHS"
+output="/home/masagis/data/third_project/norm_ihs"
 input="/home/masagis/data/third_project/iHS"
 
 cd $input/$group/.
