@@ -335,6 +335,7 @@ from scipy.stats import norm
 from scipy import stats
 from sklearn import preprocessing
 import matplotlib.pyplot as plt
+import statistics as st
 
 home_dir = r"D:\maulana\third_project"
 chrom = 29
@@ -552,9 +553,16 @@ class meta_ss:
     #initiane instance variables of breed, tests, and chromosome   
     
     def __init__(self, breed):
+        #intended for the name of each breed
         self.breed = str(breed)
+        #intended to store concatenaded meta_score for all chromosomes
         self.scores = {}
+        #intended to store bonferroni correction value
         self.bonf = []
+        #intended to store scanning window size on the tests
+        self.window = []
+        #intended to store regions passing the threshold of bonferroni
+        self.sig_regions = {}
             
     def finalize(self):
         final_df = pd.DataFrame({})
@@ -565,6 +573,8 @@ class meta_ss:
         final_df = final_df.assign(score= lambda x: final_df["numerator"] / np.sqrt(final_df["denumerator"]))
         #calculating -log(p-value) for the score for each window
         final_df = final_df.assign(min_log_pval= lambda x: -1*np.log(norm.pdf(final_df["score"])))
+        #store scanning window size into self
+        self.window = abs(st.mode(final_df["window"]-final_df["window"].shift(-1)))
         #getting the length of rows(scanning windows) in final_df
         length_row = len(final_df)
         #set chr and window as index of final_df
@@ -574,18 +584,39 @@ class meta_ss:
         #save the final df in instance variable
         self.scores = final_df
         return final_df
+    
+    def filter_regions(self):
+        #save regions passing the treshold
+        temp = self.scores[self.scores["min_log_pval"] > self.bonf].reset_index()
+        #assign end of window column
+        temp = temp.assign(end= lambda x: temp["window"] + self.window)
+        #re_order columns
+        cols = [-1, 0, 1, 2:]
+        temp = temp[cols]
+        self.sig_regions = temp
+        return self.sig_regions
 
 #Running meta_ss for atfl    
 atfl = meta_ss("atfl")
 atfl.finalize()
 atfl.scores
+atfl.filter_regions()
+atfl.sig_regions
+
+
 #plot the distribution of meta-ss score
 sns.distplot(atfl.scores["score"])
 #plot the distribution of -log(pval) of meta-ss score
 sns.distplot(atfl.scores["min_log_pval"])
 #lineplot of index and -log(p-value) with bonf-treshold for horizontal line
-g = sns.lineplot(temp.index, temp["min_log_pval"], palette="pastel" )
-g.axes.axhline(bonf, ls='--')
+temp = atfl.scores.reset_index().reset_index()
+g = sns.lineplot(temp["index"], temp["min_log_pval"], hue=temp["chr"],palette="pastel")
+g.axes.axhline(atfl.bonf, ls='--')
+plt.show()
+
+g = sns.scatterplot(temp["index"], temp["min_log_pval"], hue=temp["chr"],
+                    legend=None ,palette="pastel")
+g.axes.axhline(atfl.bonf, ls='--')
 plt.show()
 
 atfl.chr
