@@ -325,45 +325,45 @@ plt.show()
 # column of the value(default the last column of daata), 
 #option whether value is p-value or not(default is yes) (5 arguments)
 
+#import libraries
+import os
+import pandas as pd
+import re
+import numpy as np
+import seaborn as sns
+from scipy.stats import norm
+from scipy import stats
+from sklearn import preprocessing
+import matplotlib.pyplot as plt
+
 home_dir = r"D:\maulana\third_project"
 chrom = 29
 
-class meta_ss:
-    '''Here write the explanation of meta_ss class'''
-    
-    #import libraries
-    import os
-    import pandas as pd
-    import numpy as np
-    import seaborn as sns
-    from scipy.stats import norm
-    from scipy import stats
-    from sklearn import preprocessing
-    import matplotlib.pyplot as plt
+class tests_summary:
+    '''For every chromosome, combining selsig outputs of tajima-D, fst, ihs, 
+    nsl, and xpehh tests. Outputs are z values of each test and a dataframe 
+    with numerator and denumerator columns for meta-ss class'''
 
     #set home_dir  as base_dir
-    base_dir = home_dir 
-    
-    #set list for number of chromosome
-    chro = list(range(1, chrom+1))
-    
+    base_dir = home_dir   
+  
     #list of default tests
-    default_tests = ["tajima_d"]
-    #default_tests = ["tajima_d", "fst", "ihs", "nsl", "xpehh"]
+    #default_tests = ["tajima_d"]
+    default_tests = ["tajima_d", "fst", "ihs", "nsl", "xpehh"]
     
     #initiane instance variables of breed, tests, and chromosome   
-    def __init__(self, name):
-        self.breed = name
+    def __init__(self, breed, chro):
+        self.breed = breed
+        self.chr = chro
         self.tests = self.default_tests
-        self.meta_selsig = {}
         
     def add_tests(self, test):
         self.tests.append(test)
     
     #Reading contents of Tajima's D
-    def tajima_d(self, x):
+    def tajima_d(self):
         #define the filename of tajima_d output using breed name and chromosome
-        filename = self.breed + "_" + str(x) + ".Tajima.D"
+        filename = self.breed + "_" + str(self.chr) + ".Tajima.D"
         #define the filename with its full path
         file = os.path.join(self.base_dir, "tajima_d", self.breed, filename) 
         #read the data using pandas
@@ -383,7 +383,7 @@ class meta_ss:
         #set window column as index
         data = data.set_index('window')
         data.columns = ["z_D"]
-        data["weight_D"] = 1
+        data["weighted_D"] = 1
         return data
     
     #Reading contents of Fst
@@ -399,7 +399,7 @@ class meta_ss:
         #creating empty dataframe for concatenate all fst tests
         data = pd.DataFrame({})
         #looping over to read each comparison test results
-        for file in files:
+        for num, file in enumerate(files):
             #read the file
             data1 = pd.read_csv(file, sep="\t")
             #standardized score
@@ -413,9 +413,9 @@ class meta_ss:
             data1.columns
             data1.drop(labels=["CHROM", "BIN_END", "N_VARIANTS", "WEIGHTED_FST", 
                    "MEAN_FST", "standard_fst", "pval_fst"], axis=1, inplace = True)
-            data1.columns = ["window","z_fst"]
+            data1.columns = ["window", "z_fst"+str(num)]
             data1 = data1.set_index('window')
-            data1["weighted_fst"] = 1/number_of_test
+            data1["weighted_fst_" + str(num)] = 1/number_of_test
             #concatenate by column data1 to the result
             data = pd.concat([data, data1], axis=1, join="outer")         
         return data
@@ -481,7 +481,7 @@ class meta_ss:
         #creating empty dataframe for concatenate all xpehh tests
         data = pd.DataFrame({})
         #looping over to read each comparison test results
-        for file in files:
+        for num, file in enumerate(files):
             #read the file
             data4 = pd.read_csv(file, sep="\t", header=None)
             #standardized score
@@ -495,95 +495,96 @@ class meta_ss:
             data4.columns
             data4.drop(labels=[1, 2, 3, 4, 5, 6, 7, 8, "standard_xpehh", 
                                "pval_xpehh"], axis=1, inplace = True)
-            data4.columns = ["window","z_xpehh"]
+            data4.columns = ["window", "z_xpehh_" + str(num)]
             data4 = data4.set_index("window")
-            data4["weighted_xpehh"] = 1/number_of_test 
+            data4["weighted_xpehh_" + str(num)] = 1/number_of_test 
             #concatenate by column data1 to the result
             data = pd.concat([data, data4], axis=1, join="outer")         
         return data
     
     #Combine results of all tests
-    def combined_test(self):
-        ############# for loop chromosome 1:29
-        #initiate empty meta_selsig for binding all chromosomes
-        final_df = pd.DataFrame({})
-        for num in self.chro:
-            #column binding results of the five tests
-            result = pd.DataFrame({})
-            for test in self.tests:
-                if test == "tajima_d":
-                    result = pd.concat([result, self.tajima_d(x=num)], axis=1, join="outer")
-                if test == "fst":
-                    result = pd.concat([result, self.fst()], axis=1, join="outer")
-                if test == "ihs":
-                    result = pd.concat([result, self.ihs()], axis=1, join="outer")
-                if test == "nsl":
-                    result = pd.concat([result, self.nsl()], axis=1, join="outer")    
-                if test == "xpehh":
-                    result = pd.concat([result, self.xpehh()], axis=1, join="outer")
-        
-            #Applying meta_ss 
-            #getting the length of columns in the combined dataframe
-            length_col = len(result.columns)
-            #even is the column number containing Z score for each test
-            even = [numbers for numbers in range(length_col) if numbers % 2 == 0 ]
-            #odd is the column number containing weight for each test
-            odd = [numbers for numbers in range(length_col) if numbers % 2 == 1 ]
-            #creating empty dataframe containing numerator and denumerator of meta-ss
-            meta_selsig = pd.DataFrame({'numerator' : []})
-            meta_selsig.insert(1, "denumerator", [], allow_duplicates=False)
-            #looping over each test to update the numerator and denumerator values
-            for e, o in zip(even, odd):
-                #creating temp series for multiplication of Z score and its weighted test
-                temp = result.iloc[:,e] * result.iloc[:,o]
-                #add the new generated score to the numerator column, with filling Na as 0
-                meta_selsig["numerator"] = meta_selsig.fillna(0)["numerator"] + temp.fillna(0)
-                #update the denumerator by square of weighted value, the nan values in test weight is set as 1
-                meta_selsig["denumerator"] = meta_selsig.fillna(0)["denumerator"] + result.fillna(1).iloc[:,o]**2
-            meta_selsig["chr"] = num
-            meta_selsig = meta_selsig.reset_index()
-            final_df = pd.concat([final_df, meta_selsig], axis=0)
-            ############## for loop chromosome 1:29
+    def combine_tests(self):
+        #column binding results of the five tests
+        combined = pd.DataFrame({})
+        for test in self.tests:
+            if test == "tajima_d":
+                combined = pd.concat([combined, self.tajima_d()], axis=1, join="outer")
+            if test == "fst":
+                combined = pd.concat([combined, self.fst()], axis=1, join="outer")
+            if test == "ihs":
+                combined = pd.concat([combined, self.ihs()], axis=1, join="outer")
+            if test == "nsl":
+                combined = pd.concat([combined, self.nsl()], axis=1, join="outer")    
+            if test == "xpehh":
+                combined = pd.concat([combined, self.xpehh()], axis=1, join="outer")
+        #Applying meta_ss 
+        #getting the length of columns in the combined dataframe
+        length_col = len(combined.columns)
+        #even is the column number containing Z score for each test
+        even = [numbers for numbers in range(length_col) if numbers % 2 == 0 ]
+        #odd is the column number containing weight for each test
+        odd = [numbers for numbers in range(length_col) if numbers % 2 == 1 ]
+        #creating empty dataframe containing numerator and denumerator of meta-ss
+        summary = pd.DataFrame({'numerator' : []})
+        summary.insert(1, "denumerator", [], allow_duplicates=False)
+        #looping over each test to update the numerator and denumerator values
+        for e, o in zip(even, odd):
+            #creating temp series for multiplication of Z score and its weighted test
+            temp = combined.iloc[:,e] * combined.iloc[:,o]
+            #add the new generated score to the numerator column, with filling Na as 0
+            summary["numerator"] = summary.fillna(0)["numerator"] + temp.fillna(0)
+            #update the denumerator by square of the max weighted value
+            summary["denumerator"] = summary.fillna(0)["denumerator"] + max(combined.iloc[:,o])**2
+        #assign chromosome number to chr column
+        summary["chr"] = self.chr
+        #reset index 
+        summary = summary.reset_index()
+        #get list of column names
+        cols = list(summary.columns)
+        #re-arranging columns
+        cols = cols[-1:] + cols[:-1]
+        summary = summary[cols]
+        return summary#, combined
+
+class meta_ss:
+    '''Binding tests_summary of all chromosomes.''' 
+    chrom = list(range(1,30))
+    #initiane instance variables of breed, tests, and chromosome   
+    
+    def __init__(self, breed):
+        self.breed = str(breed)
+        self.scores = {}
+        self.bonf = []
             
-        
+    def finalize(self):
+        final_df = pd.DataFrame({})
+        for chr in chrom:
+            temp = tests_summary(self.breed, chr).combine_tests()        
+            final_df = pd.concat([final_df, temp], axis=0)
         #finalizing score of meta-ss by numerator over square-root of denumerator
         final_df = final_df.assign(score= lambda x: final_df["numerator"] / np.sqrt(final_df["denumerator"]))
         #calculating -log(p-value) for the score for each window
-        final_df = final_df.assign(log_pval= lambda x: -1*np.log(norm.pdf(final_df["score"])))
+        final_df = final_df.assign(min_log_pval= lambda x: -1*np.log(norm.pdf(final_df["score"])))
         #getting the length of rows(scanning windows) in final_df
         length_row = len(final_df)
-        #bonferroni threshold
-        bonf = -1*np.log(0.05/length_row)
-        self.meta_selsig = final_df
-        return print("Combined test has been done!")
+        #set chr and window as index of final_df
+        final_df = final_df.set_index(['chr', 'window'])
+        #calculating bonferroni threshold and save it in instance variable
+        self.bonf = -1*np.log(0.05/length_row)
+        #save the final df in instance variable
+        self.scores = final_df
+        return final_df
 
-#(Next task, combining by row for all chromosomes, and plot by chromosomes in x-axis #in combined_test_part)
-
+#Running meta_ss for atfl    
 atfl = meta_ss("atfl")
-atfl.breed
-atfl.tests
-atfl.chro
-atfl.combined_test()
-atfl.meta_selsig
-temp = atfl.meta_selsig
-temp.chr.unique()
-temp.score.unique()
-
-
-atfl.add_tests("iSAFE")
-atfl.add_tests("tajima_d")
-atfl.add_tests("ihs")
-atfl.add_tests("fst")
-atfl.add_tests("nsl")
-temp = atfl.combined_test()
-temp.columns
-temp
+atfl.finalize()
+atfl.scores
 #plot the distribution of meta-ss score
-sns.distplot(temp["score"])
+sns.distplot(atfl.scores["score"])
 #plot the distribution of -log(pval) of meta-ss score
-sns.distplot(temp["log_pval"])
+sns.distplot(atfl.scores["min_log_pval"])
 #lineplot of index and -log(p-value) with bonf-treshold for horizontal line
-g = sns.lineplot(temp.index, temp["log_pval"], palette="pastel" )
+g = sns.lineplot(temp.index, temp["min_log_pval"], palette="pastel" )
 g.axes.axhline(bonf, ls='--')
 plt.show()
 
