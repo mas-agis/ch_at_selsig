@@ -350,7 +350,7 @@ class tests_summary:
   
     #list of default tests
     #default_tests = ["tajima_d"]
-    default_tests = ["tajima_d", "fst", "ihs", "nsl", "xpehh"]
+    default_tests = ["tajima_d", "fst", "ihs", "nsl", "xpehh", "isafe"]
     
     #initiane instance variables of breed, tests, and chromosome   
     def __init__(self, breed, chro):
@@ -503,6 +503,40 @@ class tests_summary:
             data = pd.concat([data, data4], axis=1, join="outer")         
         return data
     
+    #Reading contents of isafe
+    def isafe(self):
+        #define the filename of norm_isafe output using chromosome name
+        filename = "bin_" + str(self.chr) + "_10000"
+        #define the filename with its full path
+        file = os.path.join(self.base_dir, "norm_isafe", self.breed, filename) 
+        #read file
+        data5 = pd.read_csv(file, sep=",", header = "infer")
+        #create window column by adding 1 to bin-start, to match scanning window of other tests
+        data5["window"] = data5["pos"] + 1 
+        #calculate p-value and transform to Z score
+        X = data5["isafe"]
+        data5["standard_isafe"] = preprocessing.scale(X)
+        #getting probability for each point in normal distribution
+        data5["pval_isafe"] = norm.pdf(data5["standard_isafe"]) 
+        #transform probability to z-score - both un/normalized have same z-score
+        data5["z_isafe"] = stats.zscore(data5["pval_isafe"], nan_policy="omit")
+        #weight of the data5
+        data5["weighted_isafe"] = 1
+        ##ditto for daf
+        X = data5["daf"]
+        data5["standard_daf"] = preprocessing.scale(X)
+        #getting probability for each point in normal distribution
+        data5["pval_daf"] = norm.pdf(data5["standard_daf"]) 
+        #transform probability to z-score - both un/normalized have same z-score
+        data5["z_daf"] = stats.zscore(data5["pval_daf"], nan_policy="omit")
+        #weight of the data5
+        data5["weighted_daf"] = 1
+        #keep only chro, window, and z columns
+        data5.columns
+        data5 = data5[["window", "z_isafe", "weighted_isafe", "z_daf", "weighted_daf"]]
+        data5 = data5.set_index("window")
+        return data5
+        
     #Combine results of all tests
     def combine_tests(self):
         #column binding results of the five tests
@@ -518,6 +552,9 @@ class tests_summary:
                 combined = pd.concat([combined, self.nsl()], axis=1, join="outer")    
             if test == "xpehh":
                 combined = pd.concat([combined, self.xpehh()], axis=1, join="outer")
+            if test == "isafe":
+                combined = pd.concat([combined, self.isafe()], axis=1, join="outer")
+                
         #Applying meta_ss 
         #getting the length of columns in the combined dataframe
         length_col = len(combined.columns)
@@ -566,7 +603,8 @@ class meta_ss:
             
     def finalize(self):
         final_df = pd.DataFrame({})
-        for chr in chrom:
+        #for chr in chrom:
+        for chr in range(1,30):
             temp = tests_summary(self.breed, chr).combine_tests()        
             final_df = pd.concat([final_df, temp], axis=0)
         #finalizing score of meta-ss by numerator over square-root of denumerator
@@ -591,8 +629,8 @@ class meta_ss:
         #assign end of window column
         temp = temp.assign(end= lambda x: temp["window"] + self.window)
         #re_order columns
-        cols = [-1, 0, 1, 2:]
-        temp = temp[cols]
+        #cols = [-1, 0, 1, 2:]
+        #temp = temp[cols]
         self.sig_regions = temp
         return self.sig_regions
 
@@ -602,7 +640,6 @@ atfl.finalize()
 atfl.scores
 atfl.filter_regions()
 atfl.sig_regions
-
 
 #plot the distribution of meta-ss score
 sns.distplot(atfl.scores["score"])
@@ -619,6 +656,15 @@ g = sns.scatterplot(temp["index"], temp["min_log_pval"], hue=temp["chr"],
 g.axes.axhline(atfl.bonf, ls='--')
 plt.show()
 
+
+##Scratch and only for debugging part
+#running tests_summary
+atfl = tests_summary("atfl", chrom)
+atfl.isafe()
+atfl.xpehh()
+atfl.combine_tests()
+
+#another scratch
 atfl.chr
 atfl.base_dir
 atfl.number
