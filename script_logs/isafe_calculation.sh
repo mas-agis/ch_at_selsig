@@ -61,7 +61,7 @@ length_index=${#start[@]}-1
 i=0
 while [[ $i -lt $length_index ]]
 do
-  python2 $iSAFE --input $input/$1/$1_$2.recode.vcf.gz --output $output/$1/$i --AA $aa/aa_$2.fa --region "$2:${start[$i]}-${start[$i+1]}" --IgnoreGaps 
+  python2 $iSAFE --input $input/$1/$1_$2.recode.vcf.gz --output $output/$1/$i --AA $aa/aa_$2.fa --region "$2:${start[$i]}-${start[$i+1]}" --IgnoreGaps --MinRegionSize-ps 100 
   ((i++))
 done
 
