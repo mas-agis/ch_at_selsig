@@ -11,13 +11,13 @@ import pandas as pd
 
 #set working directory
 os.getcwd()
-os.chdir(r"D:\maulana\third_project\isafe\atfl")
+os.chdir(r"D:\maulana\third_project")
 
 
 #define home directory containing folders for isafe outputs for each breed
 home_dir = r"D:\maulana\third_project\isafe"
 #define target directory for binning isafe files each breed
-target_dir = r"D:\maulana\third_project\norm_isafe"
+target_dir = r"D:\maulana\third_project\10_kb\norm_isafe"
 
 class binning_isafe:
     '''Binning isafe score based on window size. Arguments needed is breed code
@@ -72,8 +72,21 @@ class binning_isafe:
 atfl = binning_isafe("atfl", 10000)
 atfl.execute()
 
+#binning isafe for chbt
+chbt = binning_isafe("chbt", 10000)
+chbt.execute()
 
+#binning isafe for chha
+chha = binning_isafe("chha", 10000)
+chha.execute()
 
+#binning isafe for chme
+chme = binning_isafe("chme", 10000)
+chme.execute()
+
+#binning isafe for chya
+chya = binning_isafe("chya", 10000)
+chya.execute()
 
 
 ##scratch
