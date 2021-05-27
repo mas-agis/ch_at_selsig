@@ -34,6 +34,10 @@ import statistics as st
 #home_dir\test2\breed2\
 home_dir = r"D:\maulana\third_project\10_kb"
 
+###############################################################################
+#Fullversion with 6 tests
+###############################################################################
+
 #defining class of test_summary
 class tests_summary:
     '''For every chromosome, combining selsig outputs of tajima-D, fst, ihs, 
@@ -452,6 +456,430 @@ g.axes.axhline(chya.bonf, ls='--')
 plt.show()
 #taking columns 0 to 2 of significant regions and write it to bed file wo header&index
 chya.sig_regions.iloc[:, 0:3].to_csv(os.path.join(home_dir,"sign_regions","chya") ,sep="\t", header=None, index=None)
+
+
+###############################################################################
+#Version without isafe
+###############################################################################
+
+#defining class of test_summary
+class tests_summary:
+    '''For every chromosome, combining selsig outputs of tajima-D, fst, ihs, 
+    nsl, and xpehh tests. Outputs are z values of each test and a dataframe 
+    with numerator and denumerator columns for meta-ss class'''
+
+    #set home_dir  as base_dir
+    base_dir = home_dir   
+  
+    #list of default tests
+    #default_tests = ["tajima_d"]
+    default_tests = ["tajima_d", "fst", "ihs", "nsl", "xpehh"]
+    
+    #initiane instance variables of breed, tests, and chromosome   
+    def __init__(self, breed, chro):
+        self.breed = breed
+        self.chr = chro
+        self.tests = self.default_tests
+        
+    def add_tests(self, test):
+        self.tests.append(test)
+    
+    #Reading contents of Tajima's D
+    def tajima_d(self):
+        #define the filename of tajima_d output using breed name and chromosome
+        filename = self.breed + "_" + str(self.chr) + ".Tajima.D"
+        #define the filename with its full path
+        file = os.path.join(self.base_dir, "tajima_d", self.breed, filename) 
+        #read the data using pandas
+        data = pd.read_csv(file, sep="\t")
+        #create window column by adding 1 to bin-start, to match scanning window of other tests
+        data = data.assign(window = lambda x: data["BIN_START"] + 1)
+        #standardized score
+        X = data["TajimaD"]
+        data["standard_TajimaD"] = preprocessing.scale(X)
+        #getting probability for each point in normal distribution
+        data["pval_tajima"] = norm.pdf(data["standard_TajimaD"] ) 
+        #transform probability to z-score - both un/normalized have same z-score
+        data["z"] = stats.zscore(data["pval_tajima"], nan_policy="omit")
+        #keep only chro, window, and z columns
+        data.drop(labels=["CHROM", "BIN_START", "N_SNPS", "TajimaD", "standard_TajimaD", 
+                  "pval_tajima"], axis=1, inplace = True)
+        #set window column as index
+        data = data.set_index('window')
+        data.columns = ["z_D"]
+        data["weighted_D"] = 1
+        return data
+    
+    #Reading contents of Fst
+    def fst(self):
+        #define the path of fst output for current breed
+        path = os.path.join(self.base_dir, "fst", self.breed)
+        #define searching pattern for output file of fst with same chromosomes
+        pattern = r".*" + str(self.chr) + ".windowed.weir.fst"
+        #list several fst outputs for current breed and chromosome against other breeds
+        files = [os.path.join(path, f) for f in os.listdir(path) if re.match(pattern, f)]
+        #keep number of fst tests for current breed, in order to weight the score
+        number_of_test = len(files)
+        #creating empty dataframe for concatenate all fst tests
+        data = pd.DataFrame({})
+        #looping over to read each comparison test results
+        for num, file in enumerate(files):
+            #read the file
+            data1 = pd.read_csv(file, sep="\t")
+            #standardized score
+            X = data1["MEAN_FST"]
+            data1["standard_fst"] = preprocessing.scale(X)
+            #getting probability for each point in normal distribution
+            data1["pval_fst"] = norm.pdf(data1["standard_fst"])
+            #transform probability to z-score - both un/normalized have same z-score
+            data1["z"] = stats.zscore(data1["pval_fst"], nan_policy="omit")
+            #keep only chro, window, and z columns
+            data1.columns
+            data1.drop(labels=["CHROM", "BIN_END", "N_VARIANTS", "WEIGHTED_FST", 
+                   "MEAN_FST", "standard_fst", "pval_fst"], axis=1, inplace = True)
+            data1.columns = ["window", "z_fst"+str(num)]
+            data1 = data1.set_index('window')
+            data1["weighted_fst_" + str(num)] = 1/number_of_test
+            #concatenate by column data1 to the result
+            data = pd.concat([data, data1], axis=1, join="outer")         
+        return data
+
+    #Reading contents of window-normalized ihs 
+    def ihs(self):
+        #define the filename of tajima_d output using breed name and chromosome
+        filename = self.breed + "_" + str(self.chr) + ".ihs.out.100bins.norm.10kb.windows"
+        #define the filename with its full path
+        file = os.path.join(self.base_dir, "norm_ihs", self.breed, filename) 
+        #read file
+        data2 = pd.read_csv(file, sep="\t", header =None)
+        #standardized score
+        X = data2[5]
+        data2["standard_ihs"] = preprocessing.scale(X)
+        #getting probability for each point in normal distribution
+        data2["pval_ihs"] = norm.pdf(data2["standard_ihs"])
+        #transform probability to z-score - both un/normalized have same z-score
+        data2["z_ihs"] = stats.zscore(data2["pval_ihs"], nan_policy="omit")
+        #keep only chro, window, and z columns
+        data2.columns
+        data2.drop(labels=[1, 2, 3, 4, 5, "standard_ihs", "pval_ihs"], axis=1,
+                   inplace = True)
+        data2.columns = ["window","z_ihs"]
+        data2 = data2.set_index("window")
+        data2["weighted_ihs"] = 1
+        return data2
+
+    #Reading contents of window-normalized nsl 
+    def nsl(self):
+        #define the filename of tajima_d output using breed name and chromosome
+        filename = self.breed + "_" + str(self.chr) + ".nsl.out.100bins.norm.10kb.windows"
+        #define the filename with its full path
+        file = os.path.join(self.base_dir, "norm_nsl", self.breed, filename) 
+        #read file
+        data3 = pd.read_csv(file, sep="\t", header =None)
+        #standardized score
+        X = data3[5]
+        data3["standard_nsl"] = preprocessing.scale(X)
+        #getting probability for each point in normal distribution
+        data3["pval_nsl"] = norm.pdf(data3["standard_nsl"])
+        #transform probability to z-score - both un/normalized have same z-score
+        data3["z_nsl"] = stats.zscore(data3["pval_nsl"], nan_policy="omit")
+        #keep only chro, window, and z columns
+        data3.columns
+        data3.drop(labels=[1, 2, 3, 4, 5, "standard_nsl", "pval_nsl"], axis=1,
+                   inplace = True)
+        data3.columns = ["window","z_nsl"]
+        data3 = data3.set_index("window")
+        data3["weighted_nsl"] = 1
+        return data3
+    
+    #Reading contents of xpehh
+    def xpehh(self):
+        #define the path of xpehh output for current breed
+        path = os.path.join(self.base_dir, "norm_xpehh", self.breed)
+        #define searching pattern for output file of fst with same chromosomes
+        pattern = r".*" + str(self.chr) + ".xpehh.out.norm.10kb.windows"
+        #list several fst outputs for current breed and chromosome against other breeds
+        files = [os.path.join(path, f) for f in os.listdir(path) if re.match(pattern, f)]
+        #keep number of fst tests for current breed, in order to weight the score
+        number_of_test = len(files)
+        #creating empty dataframe for concatenate all xpehh tests
+        data = pd.DataFrame({})
+        #looping over to read each comparison test results
+        for num, file in enumerate(files):
+            #read the file
+            data4 = pd.read_csv(file, sep="\t", header=None)
+            #standardized score
+            X = data4[8]
+            data4["standard_xpehh"] = preprocessing.scale(X)
+            #getting probability for each point in normal distribution
+            data4["pval_xpehh"] = norm.pdf(data4["standard_xpehh"]) 
+            #transform probability to z-score - both un/normalized have same z-score
+            data4["z"] = stats.zscore(data4["pval_xpehh"], nan_policy="omit")
+            #keep only chro, window, and z columns
+            data4.columns
+            data4.drop(labels=[1, 2, 3, 4, 5, 6, 7, 8, "standard_xpehh", 
+                               "pval_xpehh"], axis=1, inplace = True)
+            data4.columns = ["window", "z_xpehh_" + str(num)]
+            data4 = data4.set_index("window")
+            data4["weighted_xpehh_" + str(num)] = 1/number_of_test 
+            #concatenate by column data1 to the result
+            data = pd.concat([data, data4], axis=1, join="outer")         
+        return data
+    
+    #Reading contents of isafe
+    def isafe(self):
+        #define the filename of norm_isafe output using chromosome name
+        filename = "bin_" + str(self.chr) + "_10000"
+        #define the filename with its full path
+        file = os.path.join(self.base_dir, "norm_isafe", self.breed, filename) 
+        #read file
+        data5 = pd.read_csv(file, sep=",", header = "infer")
+        #create window column by adding 1 to bin-start, to match scanning window of other tests
+        data5["window"] = data5["pos"] + 1 
+        #calculate p-value and transform to Z score
+        X = data5["isafe"]
+        data5["standard_isafe"] = preprocessing.scale(X)
+        #getting probability for each point in normal distribution
+        data5["pval_isafe"] = norm.pdf(data5["standard_isafe"]) 
+        #transform probability to z-score - both un/normalized have same z-score
+        data5["z_isafe"] = stats.zscore(data5["pval_isafe"], nan_policy="omit")
+        #weight of the data5
+        data5["weighted_isafe"] = 1
+        ##ditto for daf
+        X = data5["daf"]
+        data5["standard_daf"] = preprocessing.scale(X)
+        #getting probability for each point in normal distribution
+        data5["pval_daf"] = norm.pdf(data5["standard_daf"]) 
+        #transform probability to z-score - both un/normalized have same z-score
+        data5["z_daf"] = stats.zscore(data5["pval_daf"], nan_policy="omit")
+        #weight of the data5
+        data5["weighted_daf"] = 1
+        #keep only chro, window, and z columns
+        data5.columns
+        data5 = data5[["window", "z_isafe", "weighted_isafe", "z_daf", "weighted_daf"]]
+        data5 = data5.set_index("window")
+        return data5
+        
+    #Combine results of all tests
+    def combine_tests(self):
+        #column binding results of the five tests
+        combined = pd.DataFrame({})
+        for test in self.tests:
+            if test == "tajima_d":
+                combined = pd.concat([combined, self.tajima_d()], axis=1, join="outer")
+            if test == "fst":
+                combined = pd.concat([combined, self.fst()], axis=1, join="outer")
+            if test == "ihs":
+                combined = pd.concat([combined, self.ihs()], axis=1, join="outer")
+            if test == "nsl":
+                combined = pd.concat([combined, self.nsl()], axis=1, join="outer")    
+            if test == "xpehh":
+                combined = pd.concat([combined, self.xpehh()], axis=1, join="outer")
+            if test == "isafe":
+                combined = pd.concat([combined, self.isafe()], axis=1, join="outer")
+                
+        #Applying meta_ss 
+        #getting the length of columns in the combined dataframe
+        length_col = len(combined.columns)
+        #even is the column number containing Z score for each test
+        even = [numbers for numbers in range(length_col) if numbers % 2 == 0 ]
+        #odd is the column number containing weight for each test
+        odd = [numbers for numbers in range(length_col) if numbers % 2 == 1 ]
+        #creating empty dataframe containing numerator and denumerator of meta-ss
+        summary = pd.DataFrame({'numerator' : []})
+        summary.insert(1, "denumerator", [], allow_duplicates=False)
+        #looping over each test to update the numerator and denumerator values
+        for e, o in zip(even, odd):
+            #creating temp series for multiplication of Z score and its weighted test
+            temp = combined.iloc[:,e] * combined.iloc[:,o]
+            #add the new generated score to the numerator column, with filling Na as 0
+            summary["numerator"] = summary.fillna(0)["numerator"] + temp.fillna(0)
+            #update the denumerator by square of the max weighted value
+            summary["denumerator"] = summary.fillna(0)["denumerator"] + max(combined.iloc[:,o])**2
+        #assign chromosome number to chr column
+        summary["chr"] = self.chr
+        #reset index 
+        summary = summary.reset_index()
+        #get list of column names
+        cols = list(summary.columns)
+        #re-arranging columns
+        cols = cols[-1:] + cols[:-1]
+        summary = summary[cols]
+        return summary#, combined
+
+#defining class of meta_ss inheriting function from test_summary
+class meta_ss:
+    '''Binding tests_summary of all chromosomes.''' 
+    chrom = list(range(1,30))
+    #initiane instance variables of breed, tests, and chromosome   
+    
+    def __init__(self, breed):
+        #intended for the name of each breed
+        self.breed = str(breed)
+        #intended to store concatenaded meta_score for all chromosomes
+        self.scores = {}
+        #intended to store bonferroni correction value
+        self.bonf = []
+        #intended to store scanning window size on the tests
+        self.window = []
+        #intended to store regions passing the threshold of bonferroni
+        self.sig_regions = {}
+            
+    def finalize(self):
+        final_df = pd.DataFrame({})
+        #for chr in chrom:
+        for chr in range(1,30):
+            temp = tests_summary(self.breed, chr).combine_tests()        
+            final_df = pd.concat([final_df, temp], axis=0)
+        #finalizing score of meta-ss by numerator over square-root of denumerator
+        final_df = final_df.assign(score= lambda x: final_df["numerator"] / np.sqrt(final_df["denumerator"]))
+        #calculating -log(p-value) for the score for each window
+        final_df = final_df.assign(min_log_pval= lambda x: -1*np.log(norm.pdf(final_df["score"])))
+        #store scanning window size into self
+        self.window = abs(st.mode(final_df["window"]-final_df["window"].shift(-1)))
+        #getting the length of rows(scanning windows) in final_df
+        length_row = len(final_df)
+        #set chr and window as index of final_df
+        final_df = final_df.set_index(['chr', 'window'])
+        #calculating bonferroni threshold and save it in instance variable
+        self.bonf = -1*np.log(0.05/length_row)
+        #save the final df in instance variable
+        self.scores = final_df
+        return final_df
+    
+    def filter_regions(self):
+        #save regions passing the treshold
+        temp = self.scores[self.scores["min_log_pval"] > self.bonf].reset_index()
+        #assign end of window column
+        temp = temp.assign(end= lambda x: temp["window"] + self.window)
+        temp["window"] = temp["window"].astype(int)
+        #re_order columns
+        #cols = [0, 1, 6, 2, 3, 4, 5]
+        cols = ["chr", "window", "end", "numerator", "denumerator", "score",
+                "min_log_pval"]
+        temp = temp[cols]
+        self.sig_regions = temp
+        return self.sig_regions
+
+##Running meta_ss for atfl    
+atfl = meta_ss("atfl")
+atfl.finalize()
+atfl.scores
+atfl.filter_regions()
+atfl.sig_regions
+
+#plot the distribution of meta-ss score
+sns.distplot(atfl.scores["score"])
+#plot the distribution of -log(pval) of meta-ss score
+sns.distplot(atfl.scores["min_log_pval"])
+#lineplot of index and -log(p-value) with bonf-treshold for horizontal line
+breed1 = atfl.scores.reset_index().reset_index()
+g = sns.lineplot(breed1["index"], breed1["min_log_pval"], hue=breed1["chr"],palette="pastel")
+g.axes.axhline(atfl.bonf, ls='--')
+plt.show()
+#scatterplot of index and -log(p-value) with bonf-treshold for horizontal line
+g = sns.scatterplot(breed1["index"], breed1["min_log_pval"], hue=breed1["chr"],
+                    legend=None ,palette="pastel")
+g.axes.axhline(atfl.bonf, ls='--')
+plt.show()
+#taking columns 0 to 2 of significant regions and write it to bed file wo header&index
+atfl.sig_regions.iloc[:, 0:3].to_csv(os.path.join(home_dir,"sign_regions_wo_isafe","atfl") ,sep="\t", header=None, index=None)
+
+
+##Running meta_ss for chbt    
+chbt = meta_ss("chbt")
+chbt.finalize()
+chbt.scores
+chbt.filter_regions()
+chbt.sig_regions
+
+#plot the distribution of meta-ss score
+sns.distplot(chbt.scores["score"])
+#plot the distribution of -log(pval) of meta-ss score
+sns.distplot(chbt.scores["min_log_pval"])
+#lineplot of index and -log(p-value) with bonf-treshold for horizontal line
+breed2 = chbt.scores.reset_index().reset_index()
+g = sns.lineplot(breed2["index"], breed2["min_log_pval"], hue=breed2["chr"],palette="pastel")
+g.axes.axhline(chbt.bonf, ls='--')
+plt.show()
+#taking columns 0 to 2 of significant regions and write it to bed file wo header&index
+chbt.sig_regions.iloc[:, 0:3].to_csv(os.path.join(home_dir,"sign_regions_wo_isafe","chbt") ,sep="\t", header=None, index=None)
+
+##Running meta_ss for chbi    
+chbi = meta_ss("chbi")
+chbi.finalize()
+chbi.scores
+chbi.filter_regions()
+chbi.sig_regions
+
+#plot the distribution of meta-ss score
+sns.distplot(chbi.scores["score"])
+#plot the distribution of -log(pval) of meta-ss score
+sns.distplot(chbi.scores["min_log_pval"])
+#lineplot of index and -log(p-value) with bonf-treshold for horizontal line
+breed3 = chbi.scores.reset_index().reset_index()
+g = sns.lineplot(breed3["index"], breed3["min_log_pval"], hue=breed3["chr"],palette="pastel")
+g.axes.axhline(chbi.bonf, ls='--')
+plt.show()
+#taking columns 0 to 2 of significant regions and write it to bed file wo header&index
+chbi.sig_regions.iloc[:, 0:3].to_csv(os.path.join(home_dir,"sign_regions_wo_isafe","chbi") ,sep="\t", header=None, index=None)
+
+##Running meta_ss for chha    
+chha = meta_ss("chha")
+chha.finalize()
+chha.scores
+chha.filter_regions()
+chha.sig_regions
+
+#plot the distribution of meta-ss score
+sns.distplot(chha.scores["score"])
+#plot the distribution of -log(pval) of meta-ss score
+sns.distplot(chha.scores["min_log_pval"])
+#lineplot of index and -log(p-value) with bonf-treshold for horizontal line
+breed4 = chha.scores.reset_index().reset_index()
+g = sns.lineplot(breed4["index"], breed4["min_log_pval"], hue=breed4["chr"],palette="pastel")
+g.axes.axhline(chha.bonf, ls='--')
+plt.show()
+#taking columns 0 to 2 of significant regions and write it to bed file wo header&index
+chha.sig_regions.iloc[:, 0:3].to_csv(os.path.join(home_dir,"sign_regions_wo_isafe","chha") ,sep="\t", header=None, index=None)
+
+##Running meta_ss for chme    
+chme = meta_ss("chme")
+chme.finalize()
+chme.scores
+chme.filter_regions()
+chme.sig_regions
+
+#plot the distribution of meta-ss score
+sns.distplot(chme.scores["score"])
+#plot the distribution of -log(pval) of meta-ss score
+sns.distplot(chme.scores["min_log_pval"])
+#lineplot of index and -log(p-value) with bonf-treshold for horizontal line
+breed5 = chme.scores.reset_index().reset_index()
+g = sns.lineplot(breed5["index"], breed5["min_log_pval"], hue=breed5["chr"],palette="pastel")
+g.axes.axhline(chme.bonf, ls='--')
+plt.show()
+#taking columns 0 to 2 of significant regions and write it to bed file wo header&index
+chme.sig_regions.iloc[:, 0:3].to_csv(os.path.join(home_dir,"sign_regions_wo_isafe","chme") ,sep="\t", header=None, index=None)
+
+##Running meta_ss for chya    
+chya = meta_ss("chya")
+chya.finalize()
+chya.scores
+chya.filter_regions()
+chya.sig_regions
+
+#plot the distribution of meta-ss score
+sns.distplot(chya.scores["score"])
+#plot the distribution of -log(pval) of meta-ss score
+sns.distplot(chya.scores["min_log_pval"])
+#lineplot of index and -log(p-value) with bonf-treshold for horizontal line
+breed6 = chya.scores.reset_index().reset_index()
+g = sns.lineplot(breed6["index"], breed6["min_log_pval"], hue=breed6["chr"],palette="pastel")
+g.axes.axhline(chya.bonf, ls='--')
+plt.show()
+#taking columns 0 to 2 of significant regions and write it to bed file wo header&index
+chya.sig_regions.iloc[:, 0:3].to_csv(os.path.join(home_dir,"sign_regions_wo_isafe","chya") ,sep="\t", header=None, index=None)
 
 
 
