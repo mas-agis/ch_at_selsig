@@ -36,6 +36,9 @@ combined = combined.set_index(['chr', 'pos'])
 sns.distplot(combined["isafe"])
 #plot the distribution of daf score
 sns.distplot(combined["daf"])
+#
+plt.scatter(combined.reset_index().index, combined.isafe)
+plt.show()
 
 #adding p-val of isafe
 combined["pval_isafe"] = norm.pdf(combined["isafe"])

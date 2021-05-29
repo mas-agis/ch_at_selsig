@@ -1,5 +1,52 @@
 ##Reading output of SelScan v.1.3.0 (iHS, nSl, iHH12)
 library(dplyr)
+library(ggplot2)
+
+#isafe
+getwd()
+setwd("D:/maulana/third_project/isafe/atfl")
+combined = data.frame()
+for (i in 1:29) {
+  print(paste0("this is file ", i))
+  filename = paste0("final_", i, ".txt")
+  temp = read.table(filename)
+  temp$chr <- i
+  combined = rbind(combined, temp)
+}
+rm (temp)
+#for isafe score
+mu = mean(combined$V2, na.rm = T)
+sig = sd(combined$V2, na.rm = T)
+combined$pval = pnorm(combined$V2, mu, sig, lower.tail = FALSE)
+combined$min_log_pval = -1*log10(combined$pval)
+bonf_tres = -1*log10(0.05/nrow(combined))
+combined$idu = as.numeric(rownames(combined))
+#plot based on min_log_pval
+ggplot(combined, aes(idu, min_log_pval, colour = chr)) + 
+  geom_point()
+#plot based on isafe score
+ggplot(combined, aes(idu, V2, colour = chr)) + 
+  geom_point() 
+
+#Extracting snps higher than bonferroni treshold
+signi_regions = filter(combined, min_log_pval > bonf_tres)
+signi_regions$start = signi_regions$V1-1 
+#keep only chr, start, and end columns
+bed = select(signi_regions, "chr", "start", "V1")
+write.table(bed, "atfl_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+#keep chr, start, end, isafe score, and min_log_pval columns 
+bed = select(signi_regions, "chr", "start", "V1", "V2", "min_log_pval")
+write.table(bed, "extend_atfl_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+#for daf score #!!(not really good for display- scores are discrete)
+mu1 = mean(combined$V3, na.rm = T)
+sig1 = sd(combined$V3, na.rm = T)
+combined$pval1 = pnorm(combined$V3, mu1, sig1, lower.tail = FALSE)
+combined$min_log_pval1 = -1*log10(combined$pval1)
+bonf_tres = -1*log10(0.05/nrow(combined))
+plot(as.numeric(rownames(combined)), combined$min_log_pval1)
+plot(as.numeric(rownames(combined)), combined$V3)
+
 
 #iHS
 setwd("D:/maulana/third_project_simul/test_ihs")
