@@ -1,8 +1,9 @@
 ##Reading output of SelScan v.1.3.0 (iHS, nSl, iHH12)
 library(dplyr)
 library(ggplot2)
+library(qqman)
 
-#isafe
+#isafe for atfl
 getwd()
 setwd("D:/maulana/third_project/isafe/atfl")
 combined = data.frame()
@@ -23,7 +24,7 @@ bonf_tres = -1*log10(0.05/nrow(combined))
 combined$idu = as.numeric(rownames(combined))
 #plot based on min_log_pval
 ggplot(combined, aes(idu, min_log_pval, colour = chr)) + 
-  geom_point()
+  geom_point() + geom_hline(yintercept=bonf_tres, linetype="dashed",color = "red")
 #plot based on isafe score
 ggplot(combined, aes(idu, V2, colour = chr)) + 
   geom_point() 
@@ -37,6 +38,199 @@ write.table(bed, "atfl_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.n
 #keep chr, start, end, isafe score, and min_log_pval columns 
 bed = select(signi_regions, "chr", "start", "V1", "V2", "min_log_pval")
 write.table(bed, "extend_atfl_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+#isafe for chha
+getwd()
+setwd("D:/maulana/third_project/isafe/chha")
+combined = data.frame()
+for (i in 1:29) {
+  print(paste0("this is file ", i))
+  filename = paste0("final_", i, ".txt")
+  temp = read.table(filename)
+  temp$chr <- i
+  combined = rbind(combined, temp)
+}
+rm (temp)
+#for isafe score
+mu = mean(combined$V2, na.rm = T)
+sig = sd(combined$V2, na.rm = T)
+combined$pval = pnorm(combined$V2, mu, sig, lower.tail = FALSE)
+combined$min_log_pval = -1*log10(combined$pval)
+bonf_tres = -1*log10(0.05/nrow(combined))
+combined$idu = as.numeric(rownames(combined))
+#plot based on min_log_pval
+ggplot(combined, aes(idu, min_log_pval, colour = chr)) + 
+  geom_point() + geom_hline(yintercept=bonf_tres, linetype="dashed",color = "red")
+#Extracting snps higher than bonferroni treshold
+signi_regions = filter(combined, min_log_pval > bonf_tres)
+signi_regions$start = signi_regions$V1-1 
+#keep only chr, start, and end columns
+bed = select(signi_regions, "chr", "start", "V1")
+write.table(bed, "chha_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+#keep chr, start, end, isafe score, and min_log_pval columns 
+bed = select(signi_regions, "chr", "start", "V1", "V2", "min_log_pval")
+write.table(bed, "extend_chha_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+#isafe for chme
+getwd()
+setwd("D:/maulana/third_project/isafe/chme")
+combined = data.frame()
+for (i in 1:29) {
+  print(paste0("this is file ", i))
+  filename = paste0("final_", i, ".txt")
+  temp = read.table(filename)
+  temp$chr <- i
+  combined = rbind(combined, temp)
+}
+rm (temp)
+#for isafe score
+mu = mean(combined$V2, na.rm = T)
+sig = sd(combined$V2, na.rm = T)
+combined$pval = pnorm(combined$V2, mu, sig, lower.tail = FALSE)
+combined$min_log_pval = -1*log10(combined$pval)
+bonf_tres = -1*log10(0.05/nrow(combined))
+combined$idu = as.numeric(rownames(combined))
+#plot based on min_log_pval
+ggplot(combined, aes(idu, min_log_pval, colour = chr, label = chr)) + 
+  geom_point(show.legend = FALSE) + 
+  geom_hline(yintercept=bonf_tres, linetype="dashed",color = "red")
+#Extracting snps higher than bonferroni treshold
+signi_regions = filter(combined, min_log_pval > bonf_tres)
+signi_regions$start = signi_regions$V1-1 
+#keep only chr, start, and end columns
+bed = select(signi_regions, "chr", "start", "V1")
+write.table(bed, "chme_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+#keep chr, start, end, isafe score, and min_log_pval columns 
+bed = select(signi_regions, "chr", "start", "V1", "V2", "min_log_pval")
+write.table(bed, "extend_chme_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+#isafe for chya
+getwd()
+setwd("D:/maulana/third_project/isafe/chya")
+combined = data.frame()
+for (i in 1:29) {
+  print(paste0("this is file ", i))
+  filename = paste0("final_", i, ".txt")
+  temp = read.table(filename)
+  temp$chr <- i
+  combined = rbind(combined, temp)
+}
+rm (temp)
+#for isafe score
+mu = mean(combined$V2, na.rm = T)
+sig = sd(combined$V2, na.rm = T)
+combined$pval = pnorm(combined$V2, mu, sig, lower.tail = FALSE)
+combined$min_log_pval = -1*log10(combined$pval)
+bonf_tres = -1*log10(0.05/nrow(combined))
+combined$idu = as.numeric(rownames(combined))
+#plot based on min_log_pval
+ggplot(combined, aes(idu, min_log_pval, colour = chr, label = chr)) + 
+  geom_point() + 
+  geom_hline(yintercept=bonf_tres, linetype="dashed",color = "red") 
+######################################################################################################
+##Part where to fix the manhattan plot again!!
+#manhattan plot using ggplot2
+#https://danielroelfs.com/blog/how-i-create-manhattan-plots-using-ggplot/
+
+data_cum <- gwas_data %>% 
+  group_by(chr) %>% 
+  summarise(max_bp = max(bp)) %>% 
+  mutate(bp_add = lag(cumsum(max_bp), default = 0)) %>% 
+  select(chr, bp_add)
+gwas_data <- gwas_data %>% 
+  inner_join(data_cum, by = "chr") %>% 
+  mutate(bp_cum = bp + bp_add)
+
+data_cum <- combined %>% 
+  group_by(chr) %>% 
+  summarise(max_bp = max(bp)) %>% 
+  mutate(bp_add = lag(cumsum(max_bp), default = 0)) %>% 
+  select(chr, bp_add)
+combined <- combined %>% 
+  inner_join(data_cum, by = "chr") %>% 
+  mutate(bp_cum = bp + bp_add)
+axis_set <- combined %>% 
+  group_by(chr) %>% 
+  summarize(center = mean(V2))
+ggplot(combined, aes(x = idu, y = min_log_pval, 
+                                  color = chr)) + #, size = -log10(p))) +
+  geom_point(alpha = 0.75) +
+  geom_hline(yintercept = bonf_tres, color = "red", linetype = "dashed") + 
+  scale_x_continuous(label = axis_set$chr, breaks = axis_set$center) +
+  scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) +
+  scale_color_manual(values = rep(c("#276FBF", "#183059"), unique(length(axis_set$chr)))) #+
+  scale_size_continuous(range = c(0.5,3)) +
+  labs(x = NULL, 
+       y = "-log10(p)") + 
+  theme_minimal() +
+  theme( 
+    legend.position = "none",
+    panel.border = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5)
+  )
+manhplot  
+manhattan(
+  combined,
+  chr = "chr",
+  bp = "V2",
+  p = "min_log_pval",
+  col = c("gray10", "gray60"),
+  snp = "",
+  #chrlabs = NULL,
+  #suggestiveline = -log10(1e-05),
+  genomewideline = bonf_tres, #-log10(5e-08),
+  #highlight = NULL,
+  logp = TRUE,
+  #annotatePval = NULL,
+  #annotateTop = TRUE,
+  #...
+)
+#####################################################################################################
+#Extracting snps higher than bonferroni treshold
+signi_regions = filter(combined, min_log_pval > bonf_tres)
+signi_regions$start = signi_regions$V1-1 
+#keep only chr, start, and end columns
+bed = select(signi_regions, "chr", "start", "V1")
+write.table(bed, "chya_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+#keep chr, start, end, isafe score, and min_log_pval columns 
+bed = select(signi_regions, "chr", "start", "V1", "V2", "min_log_pval")
+write.table(bed, "extend_chya_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+#isafe for chbt
+getwd()
+setwd("D:/maulana/third_project/isafe/chbt")
+combined = data.frame()
+for (i in 1:29) {
+  print(paste0("this is file ", i))
+  filename = paste0("final_", i, ".txt")
+  temp = read.table(filename)
+  temp$chr <- i
+  combined = rbind(combined, temp)
+}
+rm (temp)
+#for isafe score
+mu = mean(combined$V2, na.rm = T)
+sig = sd(combined$V2, na.rm = T)
+combined$pval = pnorm(combined$V2, mu, sig, lower.tail = FALSE)
+combined$min_log_pval = -1*log10(combined$pval)
+bonf_tres = -1*log10(0.05/nrow(combined))
+combined$idu = as.numeric(rownames(combined))
+#plot based on min_log_pval
+ggplot(combined, aes(idu, min_log_pval, colour = chr)) + 
+  geom_point() + geom_hline(yintercept=bonf_tres, linetype="dashed",color = "red")
+#Extracting snps higher than bonferroni treshold
+signi_regions = filter(combined, min_log_pval > bonf_tres)
+signi_regions$start = signi_regions$V1-1 
+#keep only chr, start, and end columns
+bed = select(signi_regions, "chr", "start", "V1")
+write.table(bed, "chbt_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+#keep chr, start, end, isafe score, and min_log_pval columns 
+bed = select(signi_regions, "chr", "start", "V1", "V2", "min_log_pval")
+write.table(bed, "extend_chbt_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+
 
 #for daf score #!!(not really good for display- scores are discrete)
 mu1 = mean(combined$V3, na.rm = T)
