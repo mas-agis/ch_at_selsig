@@ -244,9 +244,15 @@ combined$SNP = as.numeric(rownames(combined))
 manhattan(combined, suggestiveline = FALSE)
 #calculate p-value - both tails 
 combined$P = pnorm(combined$V6, mu, sig, lower.tail = TRUE)
+combined$phi = pnorm(combined$P, mean(combined$P, na.rm = T), sd(combined$P, na.rm = T), lower.tail = TRUE)
+head(combined)
+combined$temp = (-1*(1/combined$phi)*1) - (-1*(1/combined$phi)*combined$P) 
+combined$min_log_temp = -1*log10(combined$temp)
+
+#histogram of p-value
+hist()
 #plot using qqman
 manhattan(combined, suggestiveline = FALSE)
-
 #calculating min_log_pval_and bonf_tres
 combined$min_log_pval = -1*log10(combined$P)
 bonf_tres = -1*log10(0.05/nrow(combined))
