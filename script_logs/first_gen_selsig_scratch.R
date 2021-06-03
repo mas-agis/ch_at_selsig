@@ -2,6 +2,7 @@
 library(dplyr)
 library(ggplot2)
 library(qqman)
+vignette('qqman')
 
 #isafe for atfl
 getwd()
@@ -11,24 +12,24 @@ for (i in 1:29) {
   print(paste0("this is file ", i))
   filename = paste0("final_", i, ".txt")
   temp = read.table(filename)
-  temp$chr <- i
+  temp$CHR <- i
   combined = rbind(combined, temp)
 }
 rm (temp)
 #for isafe score
 mu = mean(combined$V2, na.rm = T)
 sig = sd(combined$V2, na.rm = T)
-combined$pval = pnorm(combined$V2, mu, sig, lower.tail = FALSE)
+#calculate p-value
+combined$P = pnorm(combined$V2, mu, sig, lower.tail = FALSE)
+#rename column 'V1' as BP
+names(combined)[1] = "BP"
+#defined order of rows as SNP names
+combined$SNP = as.numeric(rownames(combined))
+#plot using qqman
+manhattan(combined, suggestiveline = FALSE)
+#calculating min_log_pval_and bonf_tres
 combined$min_log_pval = -1*log10(combined$pval)
 bonf_tres = -1*log10(0.05/nrow(combined))
-combined$idu = as.numeric(rownames(combined))
-#plot based on min_log_pval
-ggplot(combined, aes(idu, min_log_pval, colour = chr)) + 
-  geom_point() + geom_hline(yintercept=bonf_tres, linetype="dashed",color = "red")
-#plot based on isafe score
-ggplot(combined, aes(idu, V2, colour = chr)) + 
-  geom_point() 
-
 #Extracting snps higher than bonferroni treshold
 signi_regions = filter(combined, min_log_pval > bonf_tres)
 signi_regions$start = signi_regions$V1-1 
@@ -47,20 +48,24 @@ for (i in 1:29) {
   print(paste0("this is file ", i))
   filename = paste0("final_", i, ".txt")
   temp = read.table(filename)
-  temp$chr <- i
+  temp$CHR <- i
   combined = rbind(combined, temp)
 }
 rm (temp)
 #for isafe score
 mu = mean(combined$V2, na.rm = T)
 sig = sd(combined$V2, na.rm = T)
-combined$pval = pnorm(combined$V2, mu, sig, lower.tail = FALSE)
+#calculate p-value
+combined$P = pnorm(combined$V2, mu, sig, lower.tail = FALSE)
+#rename column 'V1' as BP
+names(combined)[1] = "BP"
+#defined order of rows as SNP names
+combined$SNP = as.numeric(rownames(combined))
+#plot using qqman
+manhattan(combined, suggestiveline = FALSE)
+#calculating min_log_pval_and bonf_tres
 combined$min_log_pval = -1*log10(combined$pval)
 bonf_tres = -1*log10(0.05/nrow(combined))
-combined$idu = as.numeric(rownames(combined))
-#plot based on min_log_pval
-ggplot(combined, aes(idu, min_log_pval, colour = chr)) + 
-  geom_point() + geom_hline(yintercept=bonf_tres, linetype="dashed",color = "red")
 #Extracting snps higher than bonferroni treshold
 signi_regions = filter(combined, min_log_pval > bonf_tres)
 signi_regions$start = signi_regions$V1-1 
@@ -79,21 +84,24 @@ for (i in 1:29) {
   print(paste0("this is file ", i))
   filename = paste0("final_", i, ".txt")
   temp = read.table(filename)
-  temp$chr <- i
+  temp$CHR <- i
   combined = rbind(combined, temp)
 }
 rm (temp)
 #for isafe score
 mu = mean(combined$V2, na.rm = T)
 sig = sd(combined$V2, na.rm = T)
-combined$pval = pnorm(combined$V2, mu, sig, lower.tail = FALSE)
+#calculate p-value
+combined$P = pnorm(combined$V2, mu, sig, lower.tail = FALSE)
+#rename column 'V1' as BP
+names(combined)[1] = "BP"
+#defined order of rows as SNP names
+combined$SNP = as.numeric(rownames(combined))
+#plot using qqman
+manhattan(combined, suggestiveline = FALSE)
+#calculating min_log_pval_and bonf_tres
 combined$min_log_pval = -1*log10(combined$pval)
 bonf_tres = -1*log10(0.05/nrow(combined))
-combined$idu = as.numeric(rownames(combined))
-#plot based on min_log_pval
-ggplot(combined, aes(idu, min_log_pval, colour = chr, label = chr)) + 
-  geom_point(show.legend = FALSE) + 
-  geom_hline(yintercept=bonf_tres, linetype="dashed",color = "red")
 #Extracting snps higher than bonferroni treshold
 signi_regions = filter(combined, min_log_pval > bonf_tres)
 signi_regions$start = signi_regions$V1-1 
@@ -105,89 +113,30 @@ bed = select(signi_regions, "chr", "start", "V1", "V2", "min_log_pval")
 write.table(bed, "extend_chme_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
 
 #isafe for chya
-getwd()
 setwd("D:/maulana/third_project/isafe/chya")
 combined = data.frame()
 for (i in 1:29) {
   print(paste0("this is file ", i))
   filename = paste0("final_", i, ".txt")
   temp = read.table(filename)
-  temp$chr <- i
+  temp$CHR <- i
   combined = rbind(combined, temp)
 }
 rm (temp)
 #for isafe score
 mu = mean(combined$V2, na.rm = T)
 sig = sd(combined$V2, na.rm = T)
-combined$pval = pnorm(combined$V2, mu, sig, lower.tail = FALSE)
+#calculate p-value
+combined$P = pnorm(combined$V2, mu, sig, lower.tail = FALSE)
+#rename column 'V1' as BP
+names(combined)[1] = "BP"
+#defined order of rows as SNP names
+combined$SNP = as.numeric(rownames(combined))
+#plot using qqman
+manhattan(combined, suggestiveline = FALSE)
+#calculating min_log_pval_and bonf_tres
 combined$min_log_pval = -1*log10(combined$pval)
 bonf_tres = -1*log10(0.05/nrow(combined))
-combined$idu = as.numeric(rownames(combined))
-#plot based on min_log_pval
-ggplot(combined, aes(idu, min_log_pval, colour = chr, label = chr)) + 
-  geom_point() + 
-  geom_hline(yintercept=bonf_tres, linetype="dashed",color = "red") 
-######################################################################################################
-##Part where to fix the manhattan plot again!!
-#manhattan plot using ggplot2
-#https://danielroelfs.com/blog/how-i-create-manhattan-plots-using-ggplot/
-
-data_cum <- gwas_data %>% 
-  group_by(chr) %>% 
-  summarise(max_bp = max(bp)) %>% 
-  mutate(bp_add = lag(cumsum(max_bp), default = 0)) %>% 
-  select(chr, bp_add)
-gwas_data <- gwas_data %>% 
-  inner_join(data_cum, by = "chr") %>% 
-  mutate(bp_cum = bp + bp_add)
-
-data_cum <- combined %>% 
-  group_by(chr) %>% 
-  summarise(max_bp = max(bp)) %>% 
-  mutate(bp_add = lag(cumsum(max_bp), default = 0)) %>% 
-  select(chr, bp_add)
-combined <- combined %>% 
-  inner_join(data_cum, by = "chr") %>% 
-  mutate(bp_cum = bp + bp_add)
-axis_set <- combined %>% 
-  group_by(chr) %>% 
-  summarize(center = mean(V2))
-ggplot(combined, aes(x = idu, y = min_log_pval, 
-                                  color = chr)) + #, size = -log10(p))) +
-  geom_point(alpha = 0.75) +
-  geom_hline(yintercept = bonf_tres, color = "red", linetype = "dashed") + 
-  scale_x_continuous(label = axis_set$chr, breaks = axis_set$center) +
-  scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) +
-  scale_color_manual(values = rep(c("#276FBF", "#183059"), unique(length(axis_set$chr)))) #+
-  scale_size_continuous(range = c(0.5,3)) +
-  labs(x = NULL, 
-       y = "-log10(p)") + 
-  theme_minimal() +
-  theme( 
-    legend.position = "none",
-    panel.border = element_blank(),
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5)
-  )
-manhplot  
-manhattan(
-  combined,
-  chr = "chr",
-  bp = "V2",
-  p = "min_log_pval",
-  col = c("gray10", "gray60"),
-  snp = "",
-  #chrlabs = NULL,
-  #suggestiveline = -log10(1e-05),
-  genomewideline = bonf_tres, #-log10(5e-08),
-  #highlight = NULL,
-  logp = TRUE,
-  #annotatePval = NULL,
-  #annotateTop = TRUE,
-  #...
-)
-#####################################################################################################
 #Extracting snps higher than bonferroni treshold
 signi_regions = filter(combined, min_log_pval > bonf_tres)
 signi_regions$start = signi_regions$V1-1 
@@ -230,16 +179,87 @@ write.table(bed, "chbt_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.n
 bed = select(signi_regions, "chr", "start", "V1", "V2", "min_log_pval")
 write.table(bed, "extend_chbt_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
 
+#iHS for atfl
+getwd()
+setwd("D:/maulana/third_project/iHS/atfl")
+combined = data.frame()
+for (i in 1:29) {
+  print(paste0("this is file ", i))
+  filename = paste0("atfl_", i, ".ihs.out")
+  temp = read.table(filename)
+  temp$CHR <- i
+  combined = rbind(combined, temp)
+}
+rm (temp)
+#for iHS score 
+mu = mean(combined$V6, na.rm = T)
+sig = sd(combined$V6, na.rm = T)
+#calculate p-value - right tail only
+combined$P = pnorm(combined$V6, mu, sig, lower.tail = FALSE)
+#rename column 'V1' as BP
+names(combined)[2] = "BP"
+#defined order of rows as SNP names
+combined$SNP = as.numeric(rownames(combined))
+#plot using qqman
+manhattan(combined, suggestiveline = FALSE)
+#calculate p-value - both tails 
+combined$P = pnorm(combined$V6, mu, sig, lower.tail = TRUE)
+#plot using qqman
+manhattan(combined, suggestiveline = FALSE)
 
-
-#for daf score #!!(not really good for display- scores are discrete)
-mu1 = mean(combined$V3, na.rm = T)
-sig1 = sd(combined$V3, na.rm = T)
-combined$pval1 = pnorm(combined$V3, mu1, sig1, lower.tail = FALSE)
-combined$min_log_pval1 = -1*log10(combined$pval1)
+#calculating min_log_pval_and bonf_tres
+combined$min_log_pval = -1*log10(combined$P)
 bonf_tres = -1*log10(0.05/nrow(combined))
-plot(as.numeric(rownames(combined)), combined$min_log_pval1)
-plot(as.numeric(rownames(combined)), combined$V3)
+bonf_tres = -log10(5e-08)
+suggestiveline = -log10(1e-05)
+#Extracting snps higher than bonferroni treshold
+signi_regions = filter(combined, min_log_pval > bonf_tres)
+signi_regions = filter(combined, min_log_pval > suggestiveline)
+signi_regions$start = signi_regions$BP-1 
+#keep chr, start, end, iHS, and min_log_pval columns 
+bed_atfl = select(signi_regions, "CHR", "start", "BP", "V6", "min_log_pval")
+write.table(bed_atfl, "ihs_atfl_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+#iHS for chbi
+setwd("D:/maulana/third_project/iHS/chbi")
+combined = data.frame()
+for (i in 1:29) {
+  print(paste0("this is file ", i))
+  filename = paste0("chbi_", i, ".ihs.out")
+  temp = read.table(filename)
+  temp$CHR <- i
+  combined = rbind(combined, temp)
+}
+rm (temp)
+#for iHS score 
+mu = mean(combined$V6, na.rm = T)
+sig = sd(combined$V6, na.rm = T)
+#calculate p-value - right tail only
+combined$P = pnorm(combined$V6, mu, sig, lower.tail = FALSE)
+#rename column 'V1' as BP
+names(combined)[2] = "BP"
+#defined order of rows as SNP names
+combined$SNP = as.numeric(rownames(combined))
+#plot using qqman
+manhattan(combined, suggestiveline = FALSE)
+#calculate p-value - both tails 
+combined$P = pnorm(combined$V6, mu, sig, lower.tail = TRUE)
+#plot using qqman
+manhattan(combined, suggestiveline = FALSE)
+
+#calculating min_log_pval_and bonf_tres
+combined$min_log_pval = -1*log10(combined$P)
+bonf_tres = -1*log10(0.05/nrow(combined))
+bonf_tres = -log10(5e-08)
+suggestiveline = -log10(1e-05)
+#Extracting snps higher than bonferroni treshold
+signi_regions = filter(combined, min_log_pval > bonf_tres)
+signi_regions = filter(combined, min_log_pval > suggestiveline)
+signi_regions$start = signi_regions$BP-1 
+#keep chr, start, end, iHS, and min_log_pval columns 
+bed_chbi = select(signi_regions, "CHR", "start", "BP", "V6", "min_log_pval")
+write.table(bed_chbi, "ihs_chbi_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+
 
 
 #iHS
@@ -428,3 +448,58 @@ meta_ss_norm
 #getting p-value for each variables in meta_ss_norm both upper-lower tails
 meta_ss_pval = pnorm(meta_ss_norm, lower.tail = TRUE)
 meta_ss_pval
+
+######################################################################################################
+###Scratch
+#plot based on min_log_pval
+ggplot(combined, aes(idu, min_log_pval, colour = chr)) + 
+  geom_point() + geom_hline(yintercept=bonf_tres, linetype="dashed",color = "red")
+#plot based on isafe score
+ggplot(combined, aes(idu, V2, colour = chr)) + 
+  geom_point() 
+#manhattan plot using ggplot2
+#https://danielroelfs.com/blog/how-i-create-manhattan-plots-using-ggplot/
+
+data_cum <- gwas_data %>% 
+  group_by(chr) %>% 
+  summarise(max_bp = max(bp)) %>% 
+  mutate(bp_add = lag(cumsum(max_bp), default = 0)) %>% 
+  select(chr, bp_add)
+gwas_data <- gwas_data %>% 
+  inner_join(data_cum, by = "chr") %>% 
+  mutate(bp_cum = bp + bp_add)
+
+data_cum <- combined %>% 
+  group_by(chr) %>% 
+  summarise(max_bp = max(V1)) %>% 
+  mutate(bp_add = lag(cumsum(as.numeric(max_bp)), default = 0)) %>% 
+  select(chr, bp_add)
+data_cum$chr <- as.factor(data_cum$chr)
+combined$chr <- as.factor(combined$chr)
+data_cum
+as.data.frame(data_cum)
+merge(combined, as.data.frame(data_cum), by="chr")
+combined <- combined %>% 
+  inner_join(combined, data_cum, by = chr) %>% 
+  mutate(bp_cum = V1 + bp_add)
+axis_set <- combined %>% 
+  group_by(chr) %>% 
+  summarize(center = mean(V1))
+ggplot(combined, aes(x = idu, y = min_log_pval, 
+                     color = chr)) + #, size = -log10(p))) +
+  geom_point() +
+  geom_hline(yintercept = bonf_tres, color = "red", linetype = "dashed") + 
+  scale_x_continuous(label = axis_set$chr, breaks = axis_set$center) +
+  scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) +
+  scale_color_manual(values = rep(c("#276FBF", "#183059"), unique(length(axis_set$chr)))) #+
+scale_size_continuous(range = c(0.5,3)) +
+  labs(x = NULL, 
+       y = "-log10(p)") + 
+  theme_minimal() +
+  theme( 
+    legend.position = "none",
+    panel.border = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5)
+  )
