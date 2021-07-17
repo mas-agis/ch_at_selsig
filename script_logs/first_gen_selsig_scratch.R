@@ -4,6 +4,21 @@ library(ggplot2)
 library(qqman)
 vignette('qqman')
 
+#meta_ss for atfl
+setwd("D:/maulana/third_project/meta_ss")
+list.files()
+meta_ss_atfl = read.csv("atfl_meta_ss.csv", sep='\t')
+#calculate p-value
+meta_ss_atfl$P = pnorm(meta_ss_atfl$meta_ss)
+#rename column 'pos' as BP
+names(meta_ss_atfl)[2] = "BP"
+#rename column 'chr' as CHR
+names(meta_ss_atfl)[1] = "CHR"
+#defined order of rows as SNP names
+meta_ss_atfl$SNP = as.numeric(rownames(meta_ss_atfl))
+#plot using qqman
+manhattan(meta_ss_atfl, suggestiveline = TRUE)
+
 #isafe for atfl
 getwd()
 setwd("D:/maulana/third_project/isafe/atfl")
@@ -218,6 +233,7 @@ write.table(bed, "extend_chbi_bed", quote = FALSE, sep = "\t", row.names = FALSE
 #iHS for atfl
 getwd()
 setwd("D:/maulana/third_project/iHS/atfl")
+list.files()
 combined = data.frame()
 for (i in 1:29) {
   print(paste0("this is file ", i))
