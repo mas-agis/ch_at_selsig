@@ -9,6 +9,8 @@ Created on Tue Jun 29 16:15:47 2021
 import os
 import pandas as pd
 import re
+import seaborn as sns
+import numpy as np
 from scipy.stats import norm
 from sklearn import preprocessing
 import matplotlib.pyplot as plt
@@ -185,7 +187,7 @@ plt.scatter(chme.index, chme.meta_ss)
 plt.show()
 del chme
 
-#meta-ss without isafe
+#meta-ss only xpehh
 class meta_ss:
     '''For chromosome 1-29, combining outputs of ihs, 
     nsl, xpehh, nad iSAFE tests. Outputs are z values of meta-ss with 
@@ -242,11 +244,11 @@ class meta_ss:
         os.listdir(path)
         xpehh_comb = pd.DataFrame({})
         for i in range(1,30):
-            #define searching pattern for output file of fst with same chromosomes
+            #define searching pattern for output file of xpehh with same chromosomes
             pattern = r".*" + "_" + str(i) + ".xpehh.out"
-            #list several fst outputs for current breed and chromosome against other breeds
+            #list several xpehh outputs for current breed and chromosome against other breeds
             files = [os.path.join(path, f) for f in os.listdir(path) if re.match(pattern, f)]
-            #keep number of fst tests for current breed, in order to weight the score
+            #keep number of xpehh tests for current breed, in order to weight the score
             number_of_test = len(files)
             #creating empty dataframe for concatenate all xpehh tests
             data = pd.DataFrame({})
@@ -289,8 +291,8 @@ class meta_ss:
         combined = pd.DataFrame({})
         combined.insert(0, "pos", "int")      
         combined.insert(1, "chr", "int")
-        combined = combined.merge(self.ihs(), how="outer", on=["chr", "pos"] )
-        combined = combined.merge(self.nsl(), how="outer", on=["chr", "pos"] )
+        #combined = combined.merge(self.ihs(), how="outer", on=["chr", "pos"] )
+        #combined = combined.merge(self.nsl(), how="outer", on=["chr", "pos"] )
         combined = combined.merge(self.xpehh(), how="outer", on=["chr", "pos"] )
         combined = combined.set_index(["chr", "pos"])
         combined.columns
@@ -320,14 +322,29 @@ class meta_ss:
         #final meta-ss score
         combined = combined.assign(meta_ss = lambda x: combined["numerator"] / combined["denumerator"])
         #transform meta-ss to Z-score
-        temp_meta = combined["meta_ss"]
-        combined["meta_ss"] = preprocessing.scale(temp_meta)
+        #temp_meta = combined["meta_ss"]
+        #combined["meta_ss"] = preprocessing.scale(temp_meta)
         combined = combined.reset_index()
         #final score meta_ss with chr and pos
         return combined[["chr", "pos", "meta_ss"]]
 #chya
 chya = meta_ss("chya").combine_tests()
+plt.hist(chya.meta_ss, bins=100, color="red")
+chya.to_csv("chya_xpehh.csv", sep='\t', index =False)
+
+chya["min_log_pval"] = -1*np.log(norm.pdf(chya["meta_ss"]))
+
+g = sns.scatterplot(chya.index, chya.min_log_pval, hue=chya.chr, 
+                    legend="brief" ,palette="pastel")
+g.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize= "small")
+plt.show()
+
+
 plt.scatter(chya.index, chya.meta_ss)
+plt.show()
+
+data["pval"] = norm.pdf(data["standard"] ) #seems this is both tails
+plt.hist(data["pval"])
 plt.show()
 
 #meta-ss without nsl
