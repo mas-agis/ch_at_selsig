@@ -41,7 +41,7 @@ names(combined)[1] = "BP"
 #defined order of rows as SNP names
 combined$SNP = as.numeric(rownames(combined))
 #plot using qqman
-#manhattan(combined, suggestiveline = FALSE)
+manhattan(combined, suggestiveline = FALSE, ylim = c(0, 30))
 #calculating min_log_pval_and bonf_tres
 bonf_tres = -log10(5e-08) #according to manhattan
 combined$min_log_pval = -1*log10(combined$P)
@@ -49,7 +49,7 @@ combined$min_log_pval = -1*log10(combined$P)
 #Extracting snps higher than bonferroni treshold
 signi_regions = filter(combined, min_log_pval > bonf_tres)
 signi_regions$start = signi_regions$BP-1 
-setwd("D:/maulana/third_project/by_snp")
+setwd("D:/maulana/third_project/by_snp/isafe")
 #keep chr, start, end, isafe score, and min_log_pval columns 
 bed = select(signi_regions, "CHR", "start", "BP", "V2", "min_log_pval")
 write.table(bed, "extend_atfl_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
@@ -76,7 +76,7 @@ names(combined)[1] = "BP"
 #defined order of rows as SNP names
 combined$SNP = as.numeric(rownames(combined))
 #plot using qqman
-#manhattan(combined, suggestiveline = FALSE)
+manhattan(combined, suggestiveline = FALSE, ylim = c(0, 30))
 #calculating min_log_pval_and bonf_tres
 bonf_tres = -log10(5e-08) #according to manhattan
 combined$min_log_pval = -1*log10(combined$P)
@@ -84,7 +84,7 @@ combined$min_log_pval = -1*log10(combined$P)
 #Extracting snps higher than bonferroni treshold
 signi_regions = filter(combined, min_log_pval > bonf_tres)
 signi_regions$start = signi_regions$BP-1 
-setwd("D:/maulana/third_project/by_snp")
+setwd("D:/maulana/third_project/by_snp/isafe")
 #keep chr, start, end, isafe score, and min_log_pval columns 
 bed = select(signi_regions, "CHR", "start", "BP", "V2", "min_log_pval")
 write.table(bed, "extend_chha_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
@@ -111,7 +111,7 @@ names(combined)[1] = "BP"
 #defined order of rows as SNP names
 combined$SNP = as.numeric(rownames(combined))
 #plot using qqman
-#manhattan(combined, suggestiveline = FALSE)
+manhattan(combined, suggestiveline = FALSE, ylim = c(0, 30))
 #calculating min_log_pval_and bonf_tres
 bonf_tres = -log10(5e-08) #according to manhattan
 combined$min_log_pval = -1*log10(combined$P)
@@ -119,7 +119,7 @@ combined$min_log_pval = -1*log10(combined$P)
 #Extracting snps higher than bonferroni treshold
 signi_regions = filter(combined, min_log_pval > bonf_tres)
 signi_regions$start = signi_regions$BP-1 
-setwd("D:/maulana/third_project/by_snp")
+setwd("D:/maulana/third_project/by_snp/isafe")
 #keep chr, start, end, isafe score, and min_log_pval columns 
 bed = select(signi_regions, "CHR", "start", "BP", "V2", "min_log_pval")
 write.table(bed, "extend_chme_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
@@ -146,7 +146,7 @@ names(combined)[1] = "BP"
 #defined order of rows as SNP names
 combined$SNP = as.numeric(rownames(combined))
 #plot using qqman
-#manhattan(combined, suggestiveline = FALSE)
+manhattan(combined, suggestiveline = FALSE, ylim = c(0, 30))
 #calculating min_log_pval_and bonf_tres
 bonf_tres = -log10(5e-08) #according to manhattan
 combined$min_log_pval = -1*log10(combined$P)
@@ -154,7 +154,7 @@ combined$min_log_pval = -1*log10(combined$P)
 #Extracting snps higher than bonferroni treshold
 signi_regions = filter(combined, min_log_pval > bonf_tres)
 signi_regions$start = signi_regions$BP-1 
-setwd("D:/maulana/third_project/by_snp")
+setwd("D:/maulana/third_project/by_snp/isafe")
 #keep chr, start, end, isafe score, and min_log_pval columns 
 bed = select(signi_regions, "CHR", "start", "BP", "V2", "min_log_pval")
 write.table(bed, "extend_chya_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
@@ -181,7 +181,7 @@ names(combined)[1] = "BP"
 #defined order of rows as SNP names
 combined$SNP = as.numeric(rownames(combined))
 #plot using qqman
-manhattan(combined, suggestiveline = FALSE)
+manhattan(combined, suggestiveline = FALSE, ylim = c(0, 30))
 #calculating min_log_pval_and bonf_tres
 bonf_tres = -log10(5e-08) #according to manhattan
 combined$min_log_pval = -1*log10(combined$P)
@@ -189,7 +189,7 @@ combined$min_log_pval = -1*log10(combined$P)
 #Extracting snps higher than bonferroni treshold
 signi_regions = filter(combined, min_log_pval > bonf_tres)
 signi_regions$start = signi_regions$BP-1 
-setwd("D:/maulana/third_project/by_snp")
+setwd("D:/maulana/third_project/by_snp/isafe")
 #keep chr, start, end, isafe score, and min_log_pval columns 
 bed = select(signi_regions, "CHR", "start", "BP", "V2", "min_log_pval")
 write.table(bed, "extend_chbt_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
@@ -216,7 +216,7 @@ names(combined)[1] = "BP"
 #defined order of rows as SNP names
 combined$SNP = as.numeric(rownames(combined))
 #plot using qqman
-manhattan(combined, suggestiveline = TRUE)
+manhattan(combined, suggestiveline = FALSE, ylim = c(0, 30))
 #calculating min_log_pval_and bonf_tres
 bonf_tres = -log10(5e-08) #according to manhattan
 combined$min_log_pval = -1*log10(combined$P)
@@ -229,6 +229,7 @@ setwd("D:/maulana/third_project/by_snp")
 bed = select(signi_regions, "CHR", "start", "BP", "V2", "min_log_pval")
 write.table(bed, "extend_chbi_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
 
+#############################################################
 ##############for iHS tests##################################
 #iHS for atfl
 getwd()
@@ -519,8 +520,143 @@ signi_regions$start = signi_regions$BP-1
 bed_chya = select(signi_regions, "CHR", "start", "BP", "V6", "min_log_pval")
 write.table(bed_chya, "ihs_chya_both_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
 
+#iHS for chbi_low
+getwd()
+setwd("D:/maulana/third_project/iHS/chbi_low")
+combined = data.frame()
+for (i in 1:29) {
+  print(paste0("this is file ", i))
+  filename = paste0("chbi_low_", i, ".ihs.out")
+  temp = read.table(filename)
+  temp$CHR <- i
+  combined = rbind(combined, temp)
+  rm (temp)
+}
+#for iHS score 
+mu = mean(combined$V6, na.rm = T)
+sig = sd(combined$V6, na.rm = T)
+#rename column 'V1' as BP
+names(combined)[2] = "BP"
+#defined order of rows as SNP names
+combined$SNP = as.numeric(rownames(combined))
+#setwd for saving the outputs
+setwd("D:/maulana/third_project/by_snp/ihs")
 
+#calculate p-value - right tail only
+combined$P = pnorm(combined$V6, mu, sig, lower.tail = FALSE)
+#plot using qqman
+manhattan(combined, suggestiveline = FALSE)
+#calculating min_log_pval_and bonf_tres
+combined$min_log_pval = -1*log10(combined$P)
+#Extracting snps higher than genome-wide significant line
+signi_regions = filter(combined, min_log_pval > -log10(5e-08))
+signi_regions$start = signi_regions$BP-1 
+#keep chr, start, end, iHS, and min_log_pval columns 
+bed_chbi_low = select(signi_regions, "CHR", "start", "BP", "V6", "min_log_pval")
+write.table(bed_chbi_low, "ihs_chbi_low_right_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
 
+############################################################################
+#####Plotting Fst against CHBI##############################################
+#ATFL
+setwd("D:/maulana/third_project/10_kb/fst/atfl")
+raw_files = list.files(pattern = "*_chbi_*")
+files = grep(".fst", raw_files, value = TRUE)
+rm(raw_files)
+files
+combined = data.frame()
+for (i in files) {
+  print(paste0("this is file ", i))
+  temp = read.table(i, header = TRUE)
+  combined = rbind(combined, temp)
+  rm(temp)
+}
+head(combined)
+hist(as.numeric(combined$MEAN_FST))
+#for fst score 
+mu = mean(combined$MEAN_FST, na.rm = T)
+sig = sd(combined$MEAN_FST, na.rm = T)
+#calculating p-value
+combined$P = pnorm(combined$MEAN_FST, mu, sig, lower.tail = FALSE)
+combined$snp = row.names(combined)
+#plot using qqman
+manhattan(combined, chr= "CHROM", bp="BIN_START", p="P", snp= "snp", suggestiveline = FALSE)
+#CHHA
+setwd("D:/maulana/third_project/10_kb/fst/chha")
+raw_files = list.files(pattern = "*_chbi_*")
+files = grep(".fst", raw_files, value = TRUE)
+rm(raw_files)
+files
+combined = data.frame()
+for (i in files) {
+  print(paste0("this is file ", i))
+  temp = read.table(i, header = TRUE)
+  combined = rbind(combined, temp)
+  rm(temp)
+}
+head(combined)
+hist(as.numeric(combined$MEAN_FST))
+#for fst score 
+mu = mean(combined$MEAN_FST, na.rm = T)
+sig = sd(combined$MEAN_FST, na.rm = T)
+#calculating p-value
+combined$P = pnorm(combined$MEAN_FST, mu, sig, lower.tail = FALSE)
+combined$snp = row.names(combined)
+#plot using qqman
+manhattan(combined, chr= "CHROM", bp="BIN_START", p="P", snp= "snp", suggestiveline = FALSE)
+#CHME
+setwd("D:/maulana/third_project/10_kb/fst/chme")
+raw_files = list.files(pattern = "*_chbi_*")
+files = grep(".fst", raw_files, value = TRUE)
+rm(raw_files)
+files
+combined = data.frame()
+for (i in files) {
+  print(paste0("this is file ", i))
+  temp = read.table(i, header = TRUE)
+  combined = rbind(combined, temp)
+  rm(temp)
+}
+head(combined)
+hist(as.numeric(combined$MEAN_FST))
+#for fst score 
+mu = mean(combined$MEAN_FST, na.rm = T)
+sig = sd(combined$MEAN_FST, na.rm = T)
+#calculating p-value
+combined$P = pnorm(combined$MEAN_FST, mu, sig, lower.tail = FALSE)
+combined$snp = row.names(combined)
+#plot using qqman
+manhattan(combined, chr= "CHROM", bp="BIN_START", p="P", snp= "snp", suggestiveline = FALSE)
+#CHYA
+setwd("D:/maulana/third_project/10_kb/fst/chya")
+raw_files = list.files(pattern = "*_chbi_*")
+files = grep(".fst", raw_files, value = TRUE)
+rm(raw_files)
+files
+combined = data.frame()
+for (i in files) {
+  print(paste0("this is file ", i))
+  temp = read.table(i, header = TRUE)
+  combined = rbind(combined, temp)
+  rm(temp)
+}
+head(combined)
+hist(as.numeric(combined$MEAN_FST))
+#for fst score 
+mu = mean(combined$MEAN_FST, na.rm = T)
+sig = sd(combined$MEAN_FST, na.rm = T)
+#calculating p-value
+combined$P = pnorm(combined$MEAN_FST, mu, sig, lower.tail = FALSE)
+combined$snp = row.names(combined)
+#plot using qqman
+manhattan(combined, chr= "CHROM", bp="BIN_START", p="P", snp= "snp", suggestiveline = FALSE)
+
+#calculating min_log_pval_and bonf_tres
+combined$min_log_pval = -1*log10(combined$P)
+#Extracting snps higher than genome-wide significant line
+signi_regions = filter(combined, min_log_pval > -log10(0.05/length(row.names(combined))))
+#keep chr, start, end, iHS, and min_log_pval columns 
+bed_fst_chya_chbi = select(signi_regions, "CHROM", "BIN_START", "BIN_END", "MEAN_FST", "min_log_pval")
+write.table(bed_fst_chya_chbi, "bed_fst_chya_chbi", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
 
 
 

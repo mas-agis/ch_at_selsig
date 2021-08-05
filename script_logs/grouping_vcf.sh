@@ -3,7 +3,7 @@
 ## usage ./grouping_vcf.sh <filename listing individuals>
 
 group=$(echo "$1")
-mapfile -t myArray < <(seq 29)
+mapfile -t myArray < <(seq 1 29)
 input="/home/masagis/data/third_project/aa_phasing"
 output="/home/masagis/data/third_project/grouped_vcf"
 

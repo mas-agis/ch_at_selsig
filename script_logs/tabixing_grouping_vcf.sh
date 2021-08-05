@@ -3,7 +3,7 @@
 ## usage ./tabixing_grouping_vcf.sh <group code(atfl/chbt/chbi)>
 
 group=$(echo "$1")
-mapfile -t myArray < <(seq 29)
+mapfile -t myArray < <(seq 1 29)
 output="/home/masagis/data/third_project/grouped_vcf"
 
 cd $output/$group/
