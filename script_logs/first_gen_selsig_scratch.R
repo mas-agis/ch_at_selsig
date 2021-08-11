@@ -229,6 +229,55 @@ setwd("D:/maulana/third_project/by_snp")
 bed = select(signi_regions, "CHR", "start", "BP", "V2", "min_log_pval")
 write.table(bed, "extend_chbi_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
 
+#isafe for chbi_low
+getwd()
+setwd("D:/maulana/third_project/isafe/chbi_low")
+combined = data.frame()
+for (i in 1:29) {
+  print(paste0("this is file ", i))
+  filename = paste0("final_", i, ".txt")
+  temp = read.table(filename)
+  temp$CHR <- i
+  combined = rbind(combined, temp)
+}
+rm (temp)
+#for isafe score
+mu = mean(combined$V2, na.rm = T)
+sig = sd(combined$V2, na.rm = T)
+#calculate p-value
+combined$P = pnorm(combined$V2, mu, sig, lower.tail = FALSE)
+#rename column 'V1' as BP
+names(combined)[1] = "BP"
+#defined order of rows as SNP names
+combined$SNP = as.numeric(rownames(combined))
+#plot using qqman
+manhattan(combined, suggestiveline = FALSE, ylim = c(0, 30))
+
+
+#isafe for chbi_med
+getwd()
+setwd("D:/maulana/third_project/isafe/chbi_med")
+combined = data.frame()
+for (i in 1:29) {
+  print(paste0("this is file ", i))
+  filename = paste0("final_", i, ".txt")
+  temp = read.table(filename)
+  temp$CHR <- i
+  combined = rbind(combined, temp)
+}
+rm (temp)
+#for isafe score
+mu = mean(combined$V2, na.rm = T)
+sig = sd(combined$V2, na.rm = T)
+#calculate p-value
+combined$P = pnorm(combined$V2, mu, sig, lower.tail = FALSE)
+#rename column 'V1' as BP
+names(combined)[1] = "BP"
+#defined order of rows as SNP names
+combined$SNP = as.numeric(rownames(combined))
+#plot using qqman
+manhattan(combined, suggestiveline = FALSE, ylim = c(0, 30))
+
 #############################################################
 ##############for iHS tests##################################
 #iHS for atfl
@@ -541,7 +590,6 @@ names(combined)[2] = "BP"
 combined$SNP = as.numeric(rownames(combined))
 #setwd for saving the outputs
 setwd("D:/maulana/third_project/by_snp/ihs")
-
 #calculate p-value - right tail only
 combined$P = pnorm(combined$V6, mu, sig, lower.tail = FALSE)
 #plot using qqman
@@ -554,6 +602,40 @@ signi_regions$start = signi_regions$BP-1
 #keep chr, start, end, iHS, and min_log_pval columns 
 bed_chbi_low = select(signi_regions, "CHR", "start", "BP", "V6", "min_log_pval")
 write.table(bed_chbi_low, "ihs_chbi_low_right_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+#iHS for chbi_med
+getwd()
+setwd("D:/maulana/third_project/iHS/chbi_med")
+combined = data.frame()
+for (i in 1:29) {
+  print(paste0("this is file ", i))
+  filename = paste0("chbi_med_", i, ".ihs.out")
+  temp = read.table(filename)
+  temp$CHR <- i
+  combined = rbind(combined, temp)
+  rm (temp)
+}
+#for iHS score 
+mu = mean(combined$V6, na.rm = T)
+sig = sd(combined$V6, na.rm = T)
+#rename column 'V1' as BP
+names(combined)[2] = "BP"
+#defined order of rows as SNP names
+combined$SNP = as.numeric(rownames(combined))
+#setwd for saving the outputs
+setwd("D:/maulana/third_project/by_snp/ihs")
+#calculate p-value - right tail only
+combined$P = pnorm(combined$V6, mu, sig, lower.tail = FALSE)
+#plot using qqman
+manhattan(combined, suggestiveline = FALSE)
+#calculating min_log_pval_and bonf_tres
+combined$min_log_pval = -1*log10(combined$P)
+#Extracting snps higher than genome-wide significant line
+signi_regions = filter(combined, min_log_pval > -log10(5e-08))
+signi_regions$start = signi_regions$BP-1 
+#keep chr, start, end, iHS, and min_log_pval columns 
+bed_chbi_med = select(signi_regions, "CHR", "start", "BP", "V6", "min_log_pval")
+write.table(bed_chbi_med, "ihs_chbi_med_right_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
 
 ############################################################################
 #####Plotting Fst against CHBI##############################################
@@ -986,3 +1068,36 @@ for (chr in 1:29) {
 }
 unique(data_comb$chr)
 hist(as.numeric(data_comb$V6))
+
+##reading normalized iHS score with non-overlapped 10Kb window
+setwd("D:/maulana/third_project/10_kb/norm_ihs/atfl")
+files = list.files(pattern = "*.windows")
+combined = data.frame()
+for (i in 1:29) {
+  print(paste0("this is file ", i))
+  filename = paste0("atfl_", i, ".ihs.out.100bins.norm.10kb.windows")
+  temp = read.table(filename)
+  temp$CHR <- i
+  combined = rbind(combined, temp)
+}
+rm (temp)
+#plot histogram
+hist(combined$V6)
+#filter regions having iHS score more than 3
+signi_regions = filter(combined, V6 > 3)
+#writing signi_regions for bed annotation
+bed = select(signi_regions, "CHR", "V1", "V2", "V6")
+write.table(bed, "iHS_normalized_atfl.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+#run the command below in linux for annotation
+#java -Xmx8g -jar snpEff.jar -i bed ARS-UCD1.2.99 ~/data/third_project/10_kb/norm_ihs/atfl/iHS_normalized_atfl.txt > ~/data/third_project/10_kb/norm_ihs/atfl/iHS_normalized_atfl_annotated
+#for iHS score
+mu = mean(combined$V6, na.rm = T)
+sig = sd(combined$V6, na.rm = T)
+#calculate p-value
+combined$P = pnorm(combined$V6, mu, sig, lower.tail = FALSE)
+#rename column 'V1' as BP
+names(combined)[1] = "BP"
+#defined order of rows as SNP names
+combined$SNP = as.numeric(rownames(combined))
+#plot using qqman
+manhattan(combined, suggestiveline = FALSE, ylim = c(0, 30))
