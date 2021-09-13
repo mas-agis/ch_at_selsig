@@ -3,8 +3,8 @@
 ## usage ./
 
 myArray=($(seq 1 29))
-output="/home/masagis/data/third_project/aa_phasing"
-vcf="/home/masagis/data/third_project/snp_filter"
+output="/home/masagis/data/third_project/additional_dataset/nelore/"
+vcf="/home/masagis/data/third_project/additional_dataset/nelore/"
 aa="/home/masagis/data/Cattle/ResourceBundle/outRoot/aa"
 fill="/home/masagis/data/third_project_simul"
 beagle="/home/masagis/data/beagle/beagle.12Jul19.0df.jar"
@@ -12,7 +12,7 @@ beagle="/home/masagis/data/beagle/beagle.12Jul19.0df.jar"
 for x in "${myArray[@]}"; do
 	echo "Adding ancestral allele to chromosome $x - "; date;
 	##filling aa, keep biallelic snp only, and change missing genotype "." to "./."
-	zcat $vcf/filtered_$x.vcf.gz | perl $fill/fill-aa -a $aa/aa_$x.fa.gz 2>add_$x.err | bcftools view -m2 -M2 -v snps - | perl -pe "s/\s\.:/\t.\/.:/g" | gzip -c > $output/fill_aa_$x.vcf.gz;
+	cat $vcf/nelore-$x.vcf.gz.recode.vcf | perl $fill/fill-aa -a $aa/aa_$x.fa.gz 2>add_$x.err | bcftools view -m2 -M2 -v snps - | perl -pe "s/\s\.:/\t.\/.:/g" | gzip -c > $output/fill_aa_$x.vcf.gz;
 	#phasing
 	java -jar $beagle gt=$output/fill_aa_$x.vcf.gz out=$output/phased_$x.gt
 	#indexing out.gt.vcf.gz
