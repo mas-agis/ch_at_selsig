@@ -16,7 +16,9 @@ data = subset(data, Breed!="Shorthorn")
 #reset rownames
 rownames(data) = 1:nrow(data)
 #remove brahman outlier
-data = data[-c(103),] #remove BRahman outlier
+data = data[-c(108),] #remove BRahman outlier
+data = subset(data, Breed!="Ogaden")
+unique(data$Breed)
 
 ##Plot PC1 and PC2 of all breeds
 gp <- ggplot(data,aes(x=data$PC1, y=data$PC2, group=Breed, color=Breed, shape=Breed)) +
@@ -27,36 +29,17 @@ gp <- ggplot(data,aes(x=data$PC1, y=data$PC2, group=Breed, color=Breed, shape=Br
   geom_point(size=3)
 gp
 
-##Plot PC1 and PC2 of Taurine breeds 
-#make copy of dataset
-taurus = data
-#rows with indicine breeds
-indicine_index = c(6:11, 22:25, 42:45, 58:61, 91:93, 95:127, 130:165, 172:178)
-#set NA for PCA1 n PC2 of indicine breeds 
-taurus[indicine_index, 3] = NA
-taurus[indicine_index, 4] = NA 
-#plot
-gp <- ggplot(taurus,aes(x=taurus$PC1, y=taurus$PC2, group=Breed, color=Breed, shape=Breed)) +
-  scale_shape_manual(values=1:nlevels(taurus$Breed)) +
+#plot color based on taurine/indicine/admixed data
+data1 = read.table("breeds_group", col.names = c("Breed", "Subspecies"), sep = "\t")
+#data1$Breed = as.factor(data1$Breed)
+test = left_join(data, data1, by="Breed")
+test = subset(test, Breed!="Dabieshan")
+test$subspecies = as.factor(as.character(test$subspecies))
+##Plot PC1 and PC2 of all breeds
+gp <- ggplot(test,aes(x=test$PC1, y=test$PC2, group=Subspecies, color=Subspecies, shape=Breed)) +
+  scale_shape_manual(values=1:nlevels(data$Breed)) +
   geom_hline(yintercept = 0, linetype="dotted") + 
   geom_vline(xintercept = 0, linetype="dotted") +
-  labs(x="Component 1", y=" Component 2", title = "pca of taurine ")+
+  labs(x="Component 1", y=" Component 2", title = "pca of chinese and austrian")+
   geom_point(size=3)
 gp
-
-##Plot PC1 and PC2 of indicine breeds 
-#make copy of dataset
-indicine = data
-taurine_index = c(1:5, 12:21, 26:41, 46:57, 62:90, 94, 127:129, 165:171, 178:187) 
-#set NA for PCA1 n PC2 of indicine breeds 
-indicine[taurine_index, 3] = NA
-indicine[taurine_index, 4] = NA 
-#plot
-gp <- ggplot(indicine,aes(x=indicine$PC1, y=indicine$PC2, group=Breed, color=Breed, shape=Breed)) +
-  scale_shape_manual(values=1:nlevels(indicine$Breed)) +
-  geom_hline(yintercept = 0, linetype="dotted") + 
-  geom_vline(xintercept = 0, linetype="dotted") +
-  labs(x="Component 1", y=" Component 2", title = "pca of taurine ")+
-  geom_point(size=3)
-gp
-
