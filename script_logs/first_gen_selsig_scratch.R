@@ -26,7 +26,7 @@ names(combined)[1] = "BP"
 #defined order of rows as SNP names
 combined$SNP = as.numeric(rownames(combined))
 #plot using qqman
-#manhattan(combined, suggestiveline = FALSE, ylim = c(0, 30))
+manhattan(combined, suggestiveline = FALSE, ylim = c(0, 30))
 #calculating min_log_pval_and bonf_tres
 bonf_tres = -log10(5e-08) #according to manhattan line
 combined$min_log_pval = -1*log10(combined$P)
@@ -38,6 +38,24 @@ setwd("D:/maulana/third_project/by_snp/isafe")
 #keep chr, start, end, isafe score, and min_log_pval columns 
 bed = select(signi_regions, "CHR", "start", "BP", "V2", "min_log_pval")
 write.table(bed, "extend_atfl_bed", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+##qqplot using V2
+qq(combined$P)
+#histogram of the raw value
+hist(combined$V2)
+#manhattan plot focus on chr 6
+manhattan(subset(combined, CHR == 6))
+#zoom into region of KIT
+data_new1 = filter(combined, CHR ==6)
+plot(data_new1$BP, data_new1$V3)
+data_new2 = filter(data_new1, BP > 69500000) #70,166,681-70,254,049
+data_new2 = filter(data_new2, BP < 70700000) #70,166,681-70,254,049
+plot(data_new2$BP, data_new2$V3)
+manhattan(subset(combined, CHR == 6), xlim = c(69500000, 70700000), main = "Chr 6")
+# Make the new plot based on iSAFE score
+manhattan(subset(combined, CHR == 6), p = "V2", logp = FALSE, ylab = "iSAFE score", genomewideline = FALSE, 
+          suggestiveline = FALSE, xlim = c(69500000, 70700000), main = "Chr 6")
+
 
 #isafe for chha
 getwd()

@@ -40,6 +40,6 @@ gp <- ggplot(test,aes(x=test$PC1, y=test$PC2, group=Subspecies, color=Subspecies
   scale_shape_manual(values=1:nlevels(data$Breed)) +
   geom_hline(yintercept = 0, linetype="dotted") + 
   geom_vline(xintercept = 0, linetype="dotted") +
-  labs(x="Component 1", y=" Component 2", title = "pca of chinese and austrian")+
-  geom_point(size=3)
-gp
+  labs(x="Component 1", y=" Component 2") + #, title = "pca of chinese and austrian")+
+  geom_point(size=3) 
+gp + scale_color_manual(values=c("firebrick3",  "yellow3", "green3")) 
